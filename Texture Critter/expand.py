@@ -22,7 +22,7 @@ if __name__ == '__main__':
         source_image = Image.open(infile)
     except IOError:
         print "Could not open input file", infile
-        exit(0)
+        exit(1)
     
     # This is where stuff will happen
     expansion = source_image
@@ -32,4 +32,7 @@ if __name__ == '__main__':
         expansion.save(outfile)
     except IOError:
         print "Could not write output file", outfile
-        exit(0)
+        exit(1)
+        
+    exit(0)
+    
