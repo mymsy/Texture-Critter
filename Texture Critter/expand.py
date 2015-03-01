@@ -1,16 +1,19 @@
-'''
-Created on Feb 3, 2015
+'''A program for playing with texture expansion 
 
-@author: Mym
+Author: mym
 '''
 
 from PIL import Image
 import sys
 import argparse
 
+from texture import Texture
+
 if __name__ == '__main__':
+    # use the first line of the docstring as the program description
+    parser = argparse.ArgumentParser(description = __doc__.splitlines()[0])
+    
     # Minimum arguments - input (source) and output (expanded) filenames
-    parser = argparse.ArgumentParser()
     parser.add_argument("input_file", help="the source texture file")
     parser.add_argument("output_file", help="the destination file")
     
@@ -29,8 +32,11 @@ if __name__ == '__main__':
         print "Could not open input file", args.input_file
         exit(1)
     
-    # This is where stuff will happen
-    expansion = source_image
+    # Create the texture expander
+    tex = Texture(source_image)
+    
+    # Perform the expansion
+    expansion = tex.expand()
     
     # Write the final image
     try:
