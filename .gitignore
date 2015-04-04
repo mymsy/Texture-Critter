@@ -1,0 +1,10 @@
+# bytecode
+*.pyc
+
+# images
+textures/
+*.jpg
+
+# eclipse files
+.project
+.pydevproject
