@@ -14,8 +14,6 @@
 
 '''Tests for module texture.py'''
 
-from PIL import Image 
-
 from texture import *
 
 # using sets to test because order does not matter
@@ -71,7 +69,7 @@ def test_ell_two():
     
 def test_texture_creation_RGB():
     '''Test that RGB texture has proper mode conversion and size'''
-    colourjpg = Image.open("colourjpg.jpg")
+    colourjpg = Image.open("tests/colourjpg.jpg")
     texRGB = Texture(colourjpg)
     assert texRGB.source.mode == "RGB"
     assert texRGB._bpp == 3
@@ -80,7 +78,7 @@ def test_texture_creation_RGB():
     
 def test_texture_creation_RGBA():
     '''Test that RGBA texture has proper mode conversion and size'''
-    colourpng = Image.open("colourpng.png")
+    colourpng = Image.open("tests/colourpng.png")
     texRGBA = Texture(colourpng)
     assert texRGBA.source.mode == "RGBA"
     assert texRGBA._bpp == 4
@@ -89,7 +87,7 @@ def test_texture_creation_RGBA():
     
 def test_texture_creation_BWA():
     '''Test that BW+A texture has proper mode conversion and size'''
-    bwapng = Image.open("bwapng.png")
+    bwapng = Image.open("tests/bwapng.png")
     texBWA = Texture(bwapng)
     assert texBWA.source.mode == "RGBA"
     assert texBWA._bpp == 4
@@ -98,14 +96,10 @@ def test_texture_creation_BWA():
     
 def test_texture_creation_palette():
     '''Test that palette texture has proper mode conversion and size'''
-    colourgif = Image.open("colourgif.gif")
+    colourgif = Image.open("tests/colourgif.gif")
     texpal = Texture(colourgif)
     assert texpal.source.mode == "RGBA"
     assert texpal._bpp == 4
     assert (len(texpal._bytes) ==
             texpal._bpp * texpal.source.size[0] * texpal.source.size[1])
-    
-if __name__ == '__main__':
-    import nose
-    nose.main()
     
