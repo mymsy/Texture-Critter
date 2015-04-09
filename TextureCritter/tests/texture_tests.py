@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-'''Tests for module texture.py '''
+'''Tests for module texture.py'''
 
-#from PIL import Image
+from PIL import Image 
 
-from TextureCritter.texture import *
+from texture import *
 
 # using sets to test because order does not matter
 
@@ -33,8 +33,6 @@ ellOne = {(-1, -1), (-1, 0), (-1, 1), (0, -1)}
 ellTwo = {(-2, -2), (-2, -1), (-2, 0), (-2, 1), (-2, 2), 
           (-1, -2), (-1, -1), (-1, 0), (-1, 1), (-1, 2), 
           (0, -2), (0, -1)}
-
-#colourjpg = Image.open("tests\colourjpg.jpg")
              
 def test_base_empty():
     '''Test that the base class does not define any shifts'''
@@ -71,10 +69,43 @@ def test_ell_two():
     a = EllShape(2)
     assert set(a.shift) == ellTwo
     
-# def test_texture_creation():
-#     '''Test that texture is initialised with the proper mode conversion and size
-#     
-#     Should make more of these for weird initial modes
-#     '''
-#     a = Texture(colourjpg)
+def test_texture_creation_RGB():
+    '''Test that RGB texture has proper mode conversion and size'''
+    colourjpg = Image.open("colourjpg.jpg")
+    texRGB = Texture(colourjpg)
+    assert texRGB.source.mode == "RGB"
+    assert texRGB._bpp == 3
+    assert (len(texRGB._bytes) ==
+            texRGB._bpp * texRGB.source.size[0] * texRGB.source.size[1])
+    
+def test_texture_creation_RGBA():
+    '''Test that RGBA texture has proper mode conversion and size'''
+    colourpng = Image.open("colourpng.png")
+    texRGBA = Texture(colourpng)
+    assert texRGBA.source.mode == "RGBA"
+    assert texRGBA._bpp == 4
+    assert (len(texRGBA._bytes) ==
+            texRGBA._bpp * texRGBA.source.size[0] * texRGBA.source.size[1])
+    
+def test_texture_creation_BWA():
+    '''Test that BW+A texture has proper mode conversion and size'''
+    bwapng = Image.open("bwapng.png")
+    texBWA = Texture(bwapng)
+    assert texBWA.source.mode == "RGBA"
+    assert texBWA._bpp == 4
+    assert (len(texBWA._bytes) ==
+            texBWA._bpp * texBWA.source.size[0] * texBWA.source.size[1])
+    
+def test_texture_creation_palette():
+    '''Test that palette texture has proper mode conversion and size'''
+    colourgif = Image.open("colourgif.gif")
+    texpal = Texture(colourgif)
+    assert texpal.source.mode == "RGBA"
+    assert texpal._bpp == 4
+    assert (len(texpal._bytes) ==
+            texpal._bpp * texpal.source.size[0] * texpal.source.size[1])
+    
+if __name__ == '__main__':
+    import nose
+    nose.main()
     

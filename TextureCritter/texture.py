@@ -32,7 +32,9 @@ class Texture:
     '''
 
     # image modes that support transparency
-    alpha_modes = ["LA", "RGBA", "RGBa"]
+    # this includes palette images, because Pillow does not report 
+    # in that case
+    alpha_modes = ["LA", "RGBA", "RGBa", "P"]
 
     def __init__(self, image):
         '''Constructor
@@ -46,8 +48,8 @@ class Texture:
         '''
         
         # will be using bytearrays over individual-pixel access, for speed
-        if (image.mode in Texture.alpha_modes) or (image.mode == "P"  
-                and image.palette.mode in Texture.alpha_modes):
+
+        if (image.mode in Texture.alpha_modes):  
             # alpha channel included
             self.source = image.convert("RGBA")
             self._bpp = 4
