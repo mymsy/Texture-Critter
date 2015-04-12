@@ -108,3 +108,109 @@ def test_texture_creation_palette():
     assert (len(texpal._bytes) ==
             texpal._bpp * texpal.source.size[0] * texpal.source.size[1])
     
+class TestTexMethods:
+    '''Tests for Texture methods'''
+    def setUp(self):
+        '''Setup - create a Texture
+        
+        gradient.png is a spiral gradient centered on (128,96) in
+        a (256,192) image
+        '''
+        self.texture = Texture(Image.open("tests/gradient.png"))
+        pass
+    
+    def tearDown(self):
+        '''Teardown'''
+        del self.texture
+    
+    def testLocation(self):
+        '''Test location validity function'''
+        x = self.texture.source.size[0]
+        y = self.texture.source.size[1]
+        assert self.texture._locTest((0,0))
+        assert not self.texture._locTest((0,-1))
+        assert not self.texture._locTest((-1,0))
+        assert not self.texture._locTest((-1,-1))
+        assert self.texture._locTest((x/2,y/2))
+        assert not self.texture._locTest((x/2,y))
+        assert not self.texture._locTest((x,y/2))
+        assert self.texture._locTest((x-1,y-1))
+        assert not self.texture._locTest((x,y-1))
+        assert not self.texture._locTest((x-1,y))
+        assert not self.texture._locTest((x,y))
+        
+    def testIndex(self):
+        '''Test flat indexing function'''
+        x = self.texture.source.size[0]
+        y = self.texture.source.size[1]
+        assert self.texture._index((0,0)) == 0
+        assert self.texture._index((1,0)) == y
+        assert self.texture._index((x/2,y/2)) == x/2 * y + y/2
+        assert (self.texture._index((x-1,y-1)) + 1
+                == self.texture.source.size[0] * self.texture.source.size[1])
+        assert ((self.texture._index((x-1,y-1)) + 1) * self.texture._bpp 
+                == len(self.texture._bytes))
+        
+    def testListValid(self):
+        '''Test neighbourhood function for valid slices'''
+        x = self.texture.source.size[0]
+        y = self.texture.source.size[1]
+        valid = [1] * x * y
+        ell = EllShape(2)
+        box = SquareShape(2)
+        
+        # valid slices
+        assert self.texture._goodList((0,0), ell, valid) == []
+        assert (set(self.texture._goodList((0,0), box, valid)) ==
+                {(0, 0), (0, 1), (0, 2), 
+                 (1, 0), (1, 1), (1, 2), 
+                 (2, 0), (2, 1), (2, 2)})
+        assert (set(self.texture._goodList((x-1,0), box, valid)) ==
+                {(x-3, 0), (x-3, 1), (x-3, 2), 
+                 (x-2, 0), (x-2, 1), (x-2, 2), 
+                 (x-1, 0), (x-1, 1), (x-1, 2)})
+        assert (set(self.texture._goodList((x-1,y-1), box, valid)) ==
+                {(x-3, y-3), (x-3, y-2), (x-3, y-1), 
+                 (x-2, y-3), (x-2, y-2), (x-2, y-1), 
+                 (x-1, y-3), (x-1, y-2), (x-1, y-1)})
+        # just test the length, should get all points
+        assert (len(self.texture._goodList((x/2,y/2), box, valid)) == 
+                len(box.shift))
+        assert (len(self.texture._goodList((x/2,y/2), ell, valid)) == 
+                len(ell.shift))
+        
+    def testListInvalid(self):
+        '''Test neighbourhood function for invalid slices'''
+        x = self.texture.source.size[0]
+        y = self.texture.source.size[1]
+        invalid = [0] * x * y
+        ell = EllShape(2)
+        box = SquareShape(2)
+
+        assert self.texture._goodList((0,0), ell, invalid) == []
+        assert self.texture._goodList((0,0), box, invalid) == []
+        assert self.texture._goodList((x-1,y-1), ell, invalid) == []
+        assert self.texture._goodList((x-1,y-1), box, invalid) == []
+        assert self.texture._goodList((x/2,y/2), ell, invalid) == []
+        assert self.texture._goodList((x/2,y/2), box, invalid) == []
+        
+    def testListSemivalid(self):
+        '''Test neighbourhood function for semi-valid slices'''
+        x = self.texture.source.size[0]
+        y = self.texture.source.size[1]
+        
+        # zero through column 127, 1 column 128-255
+        semivalid = [0] * (x/2) * y + [1] * (x/2) * y
+        ell = EllShape(2)
+        box = SquareShape(2)
+
+        assert (set(self.texture._goodList((x/2,0), box, semivalid)) ==
+                {(x/2, 0),   (x/2, 1),   (x/2, 2), 
+                 (x/2+1, 0), (x/2+1, 1), (x/2+1, 2), 
+                 (x/2+2, 0), (x/2+2, 1), (x/2+2, 2)})
+        assert (set(self.texture._goodList((x/2,y/2), ell, semivalid)) ==
+                {(x/2, y/2-2), (x/2, y/2-1)})
+        assert (len(self.texture._goodList((x/2-1,y/2), box, semivalid)) == 10)
+        assert (len(self.texture._goodList((x/2,y/2), box, semivalid)) == 15)
+        assert (len(self.texture._goodList((x/2+1,y/2), box, semivalid)) == 20)
+        
