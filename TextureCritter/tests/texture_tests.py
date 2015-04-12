@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-'''Tests for module texture.py'''
+'''Tests for module texture.py
+
+Tests are written for the nose framework and should be run with 
+TextureCritter as the working directory in order for the image paths to
+work correctly.
+'''
 
 from texture import *
 

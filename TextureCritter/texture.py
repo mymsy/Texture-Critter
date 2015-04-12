@@ -59,6 +59,45 @@ class Texture:
             self._bpp = 3
         self._bytes = bytearray(self.source.tobytes())
         
+    def _locTest(self, point):
+        '''Test whether a pixel is within this image
+        
+        Arguments:
+        point -- the pixel to be tested
+        
+        Returns: true if the pixel is within the image, false if not
+        '''
+        return ((point[0] >= 0) and (point[0] < self.source.size[0]) and 
+                (point[1] >= 0) and (point[1] < self.source.size[1]))
+        
+    def _index(self, pixel):
+        '''Determine the index into flat vectors for a given pixel
+        
+        Arguments:
+        pixel -- pixel in question
+        
+        Returns -- integer location in flat lists
+        '''
+        # TODO consider using numpy for two-dim array rather than needing this
+        return (pixel[0] * self.source.size[1] + pixel[1])
+        
+    def _goodList(self, centre, neighbourhood, valid):
+        '''Create a list of initialised pixels from a Shape and a point
+        
+        Arguments:
+        centre -- the centre of the region
+        neighbourhood -- Shape surrounding the centre pixel 
+        valid -- list of valid pixels
+        
+        Returns: list of pixels defined by given shifts from the centre which
+            are both initialised and within the image
+        '''
+        ret = []
+        for shift in neighbourhood.shift:
+            point = (centre[0] + shift[0], centre[1] + shift[1])
+            if self._locTest(point) and (valid[self._index(point)] != 0):
+                ret.append(point)
+        return ret
         
     def expand(self):
         '''Expands the source texture into larger output
@@ -68,6 +107,9 @@ class Texture:
         For now just return the source
         '''
         
+        # list of valid pixels
+        # valid = [0] * target.source.size[0] * target.source.size[1]
+     
         # create an image from a bytearray
         # for now it's just the one we started with
         return Image.frombytes(self.source.mode, self.source.size, buffer(self._bytes))
@@ -76,7 +118,7 @@ class Shape:
     '''Defines a region for texture comparison.
         
     This entails is a mapping from scalar index to (row, column) shift,
-    which is used to develop a list of pixels relative to a 'center' pixel
+    which is used to develop a list of pixels relative to a 'centre' pixel
     under consideration.
     
     Base Shape is left empty; use a subclass to get a specific shape.  
@@ -118,10 +160,10 @@ class SquareShape(Shape):
 class EllShape(Shape):
     '''Defines a half-square Shape of given radius.
     
-    Subclasses Shape for a half-square of the rows above (0,0) and
-    columns to the left on the same row. This is appropriate for 
-    untargeted synthesis, where these will be the pixels defined before 
-    the current pixel.
+    Subclasses Shape for a half-square of the columns to the left of (0,0)
+    and rows above on the same column. This is appropriate for untargeted 
+    synthesis, where these will be the pixels defined before the current 
+    pixel.
     '''
     
     def __init__(self,radius):

@@ -18,7 +18,6 @@ Author: mym
 '''
 
 from PIL import Image
-import sys
 import argparse
 
 from texture import Texture
