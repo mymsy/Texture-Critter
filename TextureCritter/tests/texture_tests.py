@@ -117,14 +117,15 @@ class TestTexMethods:
         a (256,192) image
         '''
         self.texture = Texture(Image.open("tests/gradient.png"))
+        self.target = Image.open("tests/colourpng.png")
         pass
     
     def tearDown(self):
         '''Teardown'''
-        del self.texture
+        del self.texture, self.target
     
-    def testLocation(self):
-        '''Test location validity function'''
+    def testLocationSelf(self):
+        '''Test location validity function for self.source.size'''
         x = self.texture.source.size[0]
         y = self.texture.source.size[1]
         assert self.texture._locTest((0,0))
@@ -139,8 +140,24 @@ class TestTexMethods:
         assert not self.texture._locTest((x-1,y))
         assert not self.texture._locTest((x,y))
         
-    def testIndex(self):
-        '''Test flat indexing function'''
+    def testLocationOther(self):
+        '''Test location validity function for given size'''
+        x = 128
+        y = 1024
+        assert self.texture._locTest((0,0), (x,y))
+        assert not self.texture._locTest((0,-1), (x,y))
+        assert not self.texture._locTest((-1,0), (x,y))
+        assert not self.texture._locTest((-1,-1), (x,y))
+        assert self.texture._locTest((x/2,y/2), (x,y))
+        assert not self.texture._locTest((x/2,y), (x,y))
+        assert not self.texture._locTest((x,y/2), (x,y))
+        assert self.texture._locTest((x-1,y-1), (x,y))
+        assert not self.texture._locTest((x,y-1), (x,y))
+        assert not self.texture._locTest((x-1,y), (x,y))
+        assert not self.texture._locTest((x,y), (x,y))
+        
+    def testIndexSelf(self):
+        '''Test flat indexing function for self.source.size'''
         x = self.texture.source.size[0]
         y = self.texture.source.size[1]
         assert self.texture._index((0,0)) == 0
@@ -150,6 +167,16 @@ class TestTexMethods:
                 == self.texture.source.size[0] * self.texture.source.size[1])
         assert ((self.texture._index((x-1,y-1)) + 1) * self.texture._bpp 
                 == len(self.texture._bytes))
+        
+    def testIndexOther(self):
+        '''Test flat indexing function for given size'''
+        x = 128
+        y = 1024
+        assert self.texture._index((0,0), (x,y)) == 0
+        assert self.texture._index((1,0), (x,y)) == y
+        assert self.texture._index((x/2,y/2), (x,y)) == x/2 * y + y/2
+        assert (self.texture._index((x-1,y-1), (x,y)) + 1
+                == x*y)
         
     def testListValid(self):
         '''Test neighbourhood function for valid slices'''
@@ -213,4 +240,11 @@ class TestTexMethods:
         assert (len(self.texture._goodList((x/2-1,y/2), box, semivalid)) == 10)
         assert (len(self.texture._goodList((x/2,y/2), box, semivalid)) == 15)
         assert (len(self.texture._goodList((x/2+1,y/2), box, semivalid)) == 20)
+        
+    def testExpansion(self):
+        '''Test expansion function numeric output'''
+        # TODO fill this in when expand is done
+        result = self.texture.expand(self.target)
+        assert result.size == self.target.size
+        assert result.mode == self.texture.source.mode
         

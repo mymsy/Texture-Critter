@@ -31,10 +31,11 @@ if __name__ == '__main__':
     parser.add_argument("output_file", help="the destination file")
     
     # TODO gonna need to read some options
-        # targeted synthesis w/ target file (default off)
+        # targeted synthesis default off (starting with it necessary)
         # gaussian weighting (default flat)
         # neighbourhood size (default ?)
         # randomisation method (default none)
+    parser.add_argument("target_file", help="image for target of synthesis")
 
     args = parser.parse_args()
 
@@ -42,20 +43,27 @@ if __name__ == '__main__':
     try:
         source_image = Image.open(args.input_file)
     except IOError:
-        print "Could not open input file", args.input_file
+        print "Could not open input image file", args.input_file
+        exit(1)
+    
+    # Read the target image
+    try:
+        target_image = Image.open(args.target_file)
+    except IOError:
+        print "Could not open target image file", args.target_file
         exit(1)
     
     # Create the texture expander
     tex = Texture(source_image)
     
     # Perform the expansion
-    expansion = tex.expand()
+    expansion = tex.expand(target_image)
     
     # Write the final image
     try:
         expansion.save(args.output_file)
     except IOError:
-        print "Could not write output file", args.output_file
+        print "Could not write output image file", args.output_file
         exit(1)
         
     exit(0)

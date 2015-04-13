@@ -59,29 +59,39 @@ class Texture:
             self._bpp = 3
         self._bytes = bytearray(self.source.tobytes())
         
-    def _locTest(self, point):
+    def _locTest(self, point, size = 0):
         '''Test whether a pixel is within this image
         
         Arguments:
         point -- the pixel to be tested
+        size -- Image size as (width, height). Defaults to self.source.size 
         
         Returns: true if the pixel is within the image, false if not
         '''
-        return ((point[0] >= 0) and (point[0] < self.source.size[0]) and 
-                (point[1] >= 0) and (point[1] < self.source.size[1]))
+        # as zero because self is not yet defined when setting default
+        if (size == 0):
+            size = self.source.size    
         
-    def _index(self, pixel):
+        return ((point[0] >= 0) and (point[0] < size[0]) and 
+                (point[1] >= 0) and (point[1] < size[1]))
+        
+    def _index(self, pixel, size = 0):
         '''Determine the index into flat vectors for a given pixel
         
         Arguments:
-        pixel -- pixel in question
+        pixel -- Pixel in question
+        size -- Image size as (width, height). Defaults to self.source.size 
         
         Returns -- integer location in flat lists
         '''
+        # as zero because self is not yet defined when setting default
+        if (size == 0):
+            size = self.source.size
+            
         # TODO consider using numpy for two-dim array rather than needing this
-        return (pixel[0] * self.source.size[1] + pixel[1])
+        return (pixel[0] * size[1] + pixel[1])
         
-    def _goodList(self, centre, neighbourhood, valid):
+    def _goodList(self, centre, neighbourhood, valid, size = 0):
         '''Create a list of initialised pixels from a Shape and a point
         
         Arguments:
@@ -92,27 +102,43 @@ class Texture:
         Returns: list of pixels defined by given shifts from the centre which
             are both initialised and within the image
         '''
+        # as zero because self is not yet defined when setting default
+        if (size == 0):
+            size = self.source.size
+            
         ret = []
         for shift in neighbourhood.shift:
             point = (centre[0] + shift[0], centre[1] + shift[1])
-            if self._locTest(point) and (valid[self._index(point)] != 0):
+            if (self._locTest(point, size) 
+                and (valid[self._index(point,size)] != 0)):
                 ret.append(point)
         return ret
+    
+    def _compare(self):
+        pass
         
-    def expand(self):
+    def expand(self, target):
         '''Expands the source texture into larger output
         
-        Return: an Image containing the expanded texture
+        Arguments:
+        target -- Image containing the target for expansion
         
-        For now just return the source
+        Return: an Image containing the expanded texture
         '''
         
         # list of valid pixels
-        # valid = [0] * target.source.size[0] * target.source.size[1]
+        valid = [1] * (target.size[0] * target.size[1])
+        
+        # make sure the target has the same mode as the source
+        if (target.mode != self.source.mode):
+            target = target.convert(self.source.mode)
+     
+        # target bytes, for speed
+        targbytes = bytearray(target.tobytes())
      
         # create an image from a bytearray
         # for now it's just the one we started with
-        return Image.frombytes(self.source.mode, self.source.size, buffer(self._bytes))
+        return Image.frombytes(target.mode, target.size, buffer(targbytes))
     
 class Shape:
     '''Defines a region for texture comparison.
