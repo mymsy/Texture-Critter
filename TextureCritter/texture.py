@@ -58,6 +58,23 @@ class Texture:
             self.source = image.convert("RGB")
             self._bpp = 3
         self._bytes = bytearray(self.source.tobytes())
+        self.pixels = self._pixelList(self._bytes, self._bpp)
+
+    def _pixelList(self, bytelist, bpp):
+        '''Convert a list of bytes into an array of pixels.
+        
+        Arguments:
+        bytelist -- list of bytes
+        bpp -- number of bytes per pixel
+        
+        Returns: list of bpp-tuples, each corresponding to a pixel
+        
+        Preconditions: len(bytes) is a multiple of bpp
+        '''
+        pixlist = []
+        for i in range(0, len(bytelist), bpp):
+            pixlist.append(tuple(bytelist[i:i+bpp]))
+        return pixlist
         
     def _locTest(self, point, size = 0):
         '''Test whether a pixel is within this image
@@ -115,6 +132,8 @@ class Texture:
         return ret
     
     def _compare(self):
+        '''Compare regions between two images
+        '''
         pass
         
     def expand(self, target):
@@ -133,12 +152,14 @@ class Texture:
         if (target.mode != self.source.mode):
             target = target.convert(self.source.mode)
      
-        # target bytes, for speed
-        targbytes = bytearray(target.tobytes())
+        # target pixels
+        targpixels = self._pixelList(target.tobytes(), self._bpp)
      
-        # create an image from a bytearray
-        # for now it's just the one we started with
-        return Image.frombytes(target.mode, target.size, buffer(targbytes))
+        # flatten pixel list into bytes and create an image
+        targchannels = []
+        for p in targpixels: targchannels += list(p)
+        targbytes = buffer(bytearray(targchannels))
+        return Image.frombytes(target.mode, target.size, targbytes)
     
 class Shape:
     '''Defines a region for texture comparison.

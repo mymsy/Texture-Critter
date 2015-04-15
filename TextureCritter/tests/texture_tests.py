@@ -124,6 +124,19 @@ class TestTexMethods:
         '''Teardown'''
         del self.texture, self.target
     
+    def testPixList(self):
+        '''Test pixel list function'''
+        # generated at object creation
+        assert (len(self.texture.pixels) * self.texture._bpp
+                == len(self.texture._bytes))
+        for p in self.texture.pixels:
+            assert len(p) == self.texture._bpp
+            
+        # content
+        flat = range(99)
+        squish = [(i, i+1, i+2) for i in range(0,99,3)]
+        assert self.texture._pixelList(flat, 3) == squish
+    
     def testLocationSelf(self):
         '''Test location validity function for self.source.size'''
         x = self.texture.source.size[0]
@@ -247,4 +260,4 @@ class TestTexMethods:
         result = self.texture.expand(self.target)
         assert result.size == self.target.size
         assert result.mode == self.texture.source.mode
-        
+                
