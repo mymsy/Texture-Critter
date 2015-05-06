@@ -22,6 +22,27 @@ import argparse
 
 from texture import Texture
 
+def expand(source, target):
+    '''Expands the source texture into larger output
+    
+    Arguments:
+    source -- Source Texture used to be expanded
+    target -- Target Texture to guide expansion
+    
+    Return: an Image containing the expanded texture
+    '''
+    
+    # make sure the target has the same mode as the source
+    if (target.pic.mode != source.pic.mode):
+        target.pic = target.pic.convert(source.pic.mode)
+  
+    # flatten pixel list into bytes and create an image
+    targchannels = []
+    for p in target.pixels: 
+        targchannels += list(p)
+    targbytes = buffer(bytearray(targchannels))
+    return Image.frombytes(target.pic.mode, target.pic.size, targbytes)    
+
 if __name__ == '__main__':
     # use the first line of the docstring as the program description
     parser = argparse.ArgumentParser(description = __doc__.splitlines()[0])
@@ -54,10 +75,11 @@ if __name__ == '__main__':
         exit(1)
     
     # Create the texture expander
-    tex = Texture(source_image)
+    source = Texture(source_image)
+    target = Texture(target_image)
     
     # Perform the expansion
-    expansion = tex.expand(target_image)
+    expansion = expand(source, target)
     
     # Write the final image
     try:

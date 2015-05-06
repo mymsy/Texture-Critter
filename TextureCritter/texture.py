@@ -24,11 +24,10 @@ class Texture:
     '''A texture synthesis object
     
     Methods:
-    expand -- expands the source into a larger texture
     
     Class variables:
     alpha_modes -- image modes implementing transparency
-    source -- the source image for expansion, converted to RGB(A) palette   
+    pic -- the source image for expansion, converted to RGB(A) palette   
     '''
 
     # image modes that support transparency
@@ -40,7 +39,7 @@ class Texture:
         '''Constructor
         
         Arguments:
-        image -- Image to be used as the source for synthesis
+        image -- Image to be used as the source for this texture
         
         Postconditions: object is initialised with source image 
             converted to RGB(A) mode and a bytearray containing
@@ -51,16 +50,16 @@ class Texture:
 
         if (image.mode in Texture.alpha_modes):  
             # alpha channel included
-            self.source = image.convert("RGBA")
-            self._bpp = 4
+            self.pic = image.convert("RGBA")
+            self.bpp = 4
         else:
             # no alpha channel
-            self.source = image.convert("RGB")
-            self._bpp = 3
-        self._bytes = bytearray(self.source.tobytes())
-        self.pixels = self._pixelList(self._bytes, self._bpp)
+            self.pic = image.convert("RGB")
+            self.bpp = 3
+        self._bytes = bytearray(self.pic.tobytes())
+        self.pixels = self._pixelList(self._bytes)
 
-    def _pixelList(self, bytelist, bpp):
+    def _pixelList(self, bytelist):
         '''Convert a list of bytes into an array of pixels.
         
         Arguments:
@@ -72,43 +71,33 @@ class Texture:
         Preconditions: len(bytes) is a multiple of bpp
         '''
         pixlist = []
-        for i in range(0, len(bytelist), bpp):
-            pixlist.append(tuple(bytelist[i:i+bpp]))
+        for i in range(0, len(bytelist), self.bpp):
+            pixlist.append(tuple(bytelist[i:i+self.bpp]))
         return pixlist
         
-    def _locTest(self, point, size = 0):
+    def _locTest(self, point):
         '''Test whether a pixel is within this image
         
         Arguments:
         point -- the pixel to be tested
-        size -- Image size as (width, height). Defaults to self.source.size 
         
         Returns: true if the pixel is within the image, false if not
-        '''
-        # as zero because self is not yet defined when setting default
-        if (size == 0):
-            size = self.source.size    
+        '''        
+        return ((point[0] >= 0) and (point[0] < self.pic.size[0]) and 
+                (point[1] >= 0) and (point[1] < self.pic.size[1]))
         
-        return ((point[0] >= 0) and (point[0] < size[0]) and 
-                (point[1] >= 0) and (point[1] < size[1]))
-        
-    def _index(self, pixel, size = 0):
+    def _index(self, pixel):
         '''Determine the index into flat vectors for a given pixel
         
         Arguments:
         pixel -- Pixel in question
-        size -- Image size as (width, height). Defaults to self.source.size 
         
         Returns -- integer location in flat lists
         '''
-        # as zero because self is not yet defined when setting default
-        if (size == 0):
-            size = self.source.size
-            
         # TODO consider using numpy for two-dim array rather than needing this
-        return (pixel[0] * size[1] + pixel[1])
+        return (pixel[0] * self.pic.size[1] + pixel[1])
         
-    def _goodList(self, centre, neighbourhood, valid, size = 0):
+    def _goodList(self, centre, neighbourhood, valid):
         '''Create a list of initialised pixels from a Shape and a point
         
         Arguments:
@@ -119,15 +108,11 @@ class Texture:
         Returns: list of pixels defined by given shifts from the centre which
             are both initialised and within the image
         '''
-        # as zero because self is not yet defined when setting default
-        if (size == 0):
-            size = self.source.size
-            
         ret = []
         for shift in neighbourhood.shift:
             point = (centre[0] + shift[0], centre[1] + shift[1])
-            if (self._locTest(point, size) 
-                and (valid[self._index(point,size)] != 0)):
+            if (self._locTest(point) 
+                and (valid[self._index(point)] != 0)):
                 ret.append(point)
         return ret
     
@@ -136,31 +121,6 @@ class Texture:
         '''
         pass
         
-    def expand(self, target):
-        '''Expands the source texture into larger output
-        
-        Arguments:
-        target -- Image containing the target for expansion
-        
-        Return: an Image containing the expanded texture
-        '''
-        
-        # list of valid pixels
-        valid = [1] * (target.size[0] * target.size[1])
-        
-        # make sure the target has the same mode as the source
-        if (target.mode != self.source.mode):
-            target = target.convert(self.source.mode)
-     
-        # target pixels
-        targpixels = self._pixelList(target.tobytes(), self._bpp)
-     
-        # flatten pixel list into bytes and create an image
-        targchannels = []
-        for p in targpixels: targchannels += list(p)
-        targbytes = buffer(bytearray(targchannels))
-        return Image.frombytes(target.mode, target.size, targbytes)
-    
 class Shape:
     '''Defines a region for texture comparison.
         
