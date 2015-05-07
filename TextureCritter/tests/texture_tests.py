@@ -179,13 +179,13 @@ class TestTexMethods:
                  (1, 0), (1, 1), (1, 2), 
                  (2, 0), (2, 1), (2, 2)})
         assert (set(self.texture._goodList((x-1,0), box, valid)) ==
-                {(x-3, 0), (x-3, 1), (x-3, 2), 
-                 (x-2, 0), (x-2, 1), (x-2, 2), 
-                 (x-1, 0), (x-1, 1), (x-1, 2)})
+                {(-2, 0), (-2, 1), (-2, 2), 
+                 (-1, 0), (-1, 1), (-1, 2), 
+                 (0, 0),  (0, 1),  (0, 2)})
         assert (set(self.texture._goodList((x-1,y-1), box, valid)) ==
-                {(x-3, y-3), (x-3, y-2), (x-3, y-1), 
-                 (x-2, y-3), (x-2, y-2), (x-2, y-1), 
-                 (x-1, y-3), (x-1, y-2), (x-1, y-1)})
+                {(-2, -2), (-2, -1), (-2, 0), 
+                 (-1, -2), (-1, -1), (-1, 0), 
+                 (0, -2),  (0, -1),  (0, 0)})
         # just test the length, should get all points
         assert (len(self.texture._goodList((x/2,y/2), box, valid)) == 
                 len(box.shift))
@@ -218,11 +218,11 @@ class TestTexMethods:
         box = SquareShape(2)
 
         assert (set(self.texture._goodList((x/2,0), box, semivalid)) ==
-                {(x/2, 0),   (x/2, 1),   (x/2, 2), 
-                 (x/2+1, 0), (x/2+1, 1), (x/2+1, 2), 
-                 (x/2+2, 0), (x/2+2, 1), (x/2+2, 2)})
+                {(0, 0), (0, 1), (0, 2), 
+                 (1, 0), (1, 1), (1, 2), 
+                 (2, 0), (2, 1), (2, 2)})
         assert (set(self.texture._goodList((x/2,y/2), ell, semivalid)) ==
-                {(x/2, y/2-2), (x/2, y/2-1)})
+                {(0, -2), (0, -1)})
         assert (len(self.texture._goodList((x/2-1,y/2), box, semivalid)) == 10)
         assert (len(self.texture._goodList((x/2,y/2), box, semivalid)) == 15)
         assert (len(self.texture._goodList((x/2+1,y/2), box, semivalid)) == 20)
