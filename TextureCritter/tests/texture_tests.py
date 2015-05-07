@@ -20,6 +20,7 @@ work correctly.
 '''
 
 from texture import *
+from PIL import Image
 
 # using sets to test because order does not matter
 
@@ -113,7 +114,7 @@ class TestTexMethods:
     def setUp(self):
         '''Setup - create a Texture
         
-        gradient.png is a spiral gradient centered on (128,96) in
+        gradient.png is a spiral gradient cented on (128,96) in
         a (256,192) image
         '''
         self.texture = Texture(Image.open("tests/gradient.png"))

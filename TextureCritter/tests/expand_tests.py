@@ -19,14 +19,16 @@ TextureCritter as the working directory in order for the image paths to
 work correctly.
 '''
 
-from expand import *
+from expand import expand
+from texture import Texture
+from PIL import Image
 
 class TestExpandMethods:
     '''Tests for Expand methods'''
     def setUp(self):
         '''Setup - create a Texture
         
-        gradient.png is a spiral gradient centered on (128,96) in
+        gradient.png is a spiral gradient centred on (128,96) in
         a (256,192) image
         '''
         self.source = Texture(Image.open("tests/gradient.png"))

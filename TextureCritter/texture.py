@@ -18,7 +18,7 @@ class Texture -- performs texture synthesis
 class Shape -- defines the sampling shape for texture region comparison
 '''
 
-from PIL import Image
+#from PIL import Image
 
 class Texture:
     '''A texture synthesis object
@@ -113,7 +113,7 @@ class Texture:
             point = (centre[0] + shift[0], centre[1] + shift[1])
             if (self._locTest(point) 
                 and (valid[self._index(point)] != 0)):
-                ret.append(point)
+                ret.append(shift)
         return ret
     
     def _compare(self):
