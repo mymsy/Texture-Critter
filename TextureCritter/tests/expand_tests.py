@@ -19,9 +19,10 @@ TextureCritter as the working directory in order for the image paths to
 work correctly.
 '''
 
-from expand import expand
-from texture import Texture
+from expand import expand, compare
+from texture import Texture, SquareShape
 from PIL import Image
+from math import sqrt
 
 class TestExpandMethods:
     '''Tests for Expand methods'''
@@ -33,6 +34,7 @@ class TestExpandMethods:
         '''
         self.source = Texture(Image.open("tests/gradient.png"))
         self.target = Texture(Image.open("tests/colourpng.png"))
+        self.shape = SquareShape(2)
     
     def tearDown(self):
         '''Teardown'''
@@ -41,6 +43,19 @@ class TestExpandMethods:
     def testExpansion(self):
         '''Test expansion function numeric output'''
         # TODO fill this in when expand is done
-        result = expand(self.source, self.target)
+        result = expand(self.source, self.target, self.shape)
         assert result.size == self.target.pic.size
         assert result.mode == self.source.pic.mode
+
+    def testCompare(self):
+        '''Test pixel comparison'''
+        cases = [((0, 0, 0), (0, 0, 0), 0),
+                 ((0,0), (3,4), 5),
+                 ((1,2,3), (4,5,6), sqrt(27)),
+                 ((1,1,1,1), (-1,-1,-1,-1), 4),
+                 ((255, 255, 255), (255, 255, 255), 0),
+                 ((0, 0, 0), (255, 255, 255), sqrt(3)*255)
+                 ]
+        for c in cases:
+            # threshold test for floating point roundoff
+            assert(abs(compare(c[0], c[1]) - c[2]) < 1e-8)

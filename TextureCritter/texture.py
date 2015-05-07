@@ -86,16 +86,18 @@ class Texture:
         return ((point[0] >= 0) and (point[0] < self.pic.size[0]) and 
                 (point[1] >= 0) and (point[1] < self.pic.size[1]))
         
-    def _index(self, pixel):
+    def _index(self, pixel, shift = (0, 0)):
         '''Determine the index into flat vectors for a given pixel
         
         Arguments:
-        pixel -- Pixel in question
+        pixel -- 2-tuple pixel location
+        shift -- 2-tuple shift from location (def. (0,0)) 
         
         Returns -- integer location in flat lists
         '''
         # TODO consider using numpy for two-dim array rather than needing this
-        return (pixel[0] * self.pic.size[1] + pixel[1])
+        return ((pixel[0] + shift[0]) 
+                + (pixel[1] + shift[1]) * self.pic.size[0])
         
     def _goodList(self, centre, neighbourhood, valid):
         '''Create a list of initialised pixels from a Shape and a point
@@ -116,10 +118,18 @@ class Texture:
                 ret.append(shift)
         return ret
     
-    def _compare(self):
-        '''Compare regions between two images
+    def getPixel(self, loc, shift = (0, 0)):
+        '''Get the pixel at given location and shift
+        
+        Arguments:
+        loc -- 2-tuple pixel location
+        shift -- 2-tuple shift from location (def. (0,0)) 
+        
+        Returns: tuple containing the channels of the pixel
+        
+        Preconditions: loc + shift is inside the image
         '''
-        pass
+        return self.pixels[self._index(loc, shift)]
         
 class Shape:
     '''Defines a region for texture comparison.
@@ -167,8 +177,8 @@ class SquareShape(Shape):
 class EllShape(Shape):
     '''Defines a half-square Shape of given radius.
     
-    Subclasses Shape for a half-square of the columns to the left of (0,0)
-    and rows above on the same column. This is appropriate for untargeted 
+    Subclasses Shape for a half-square of the rows above (0,0)
+    and columns to the left on the same row. This is appropriate for untargeted 
     synthesis, where these will be the pixels defined before the current 
     pixel.
     '''
@@ -185,9 +195,10 @@ class EllShape(Shape):
         Postconditions: self.shift contains the appropriate shifts
         '''
         
-        # comparison is lexical and i stops at 0
+        # comparison is j < 0 (prior row) 
+        # or j == 0 and i < 0 (same row prior column)
         self.shift = [(i,j)
-                      for i in range(-radius, 1)
-                      for j in range(-radius, radius+1)
-                      if (i,j) < (0,0)]
+                      for j in range(-radius, 1)
+                      for i in range(-radius, radius+1)
+                      if ((j < 0) or (j == 0 and i < 0))]
         

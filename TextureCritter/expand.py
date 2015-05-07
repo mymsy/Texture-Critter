@@ -18,16 +18,34 @@ Author: mym
 '''
 
 from PIL import Image
+from math import sqrt
 import argparse
 
-from texture import Texture
+from texture import *
 
-def expand(source, target):
+def compare(pix1, pix2):
+    '''Compare two pixels, returning the colour-space distance between
+    
+    Arguments:
+    pix1 -- tuple containing the channels of the first pixel
+    pix2 -- tuple containing the channels of the second pixel
+    
+    Return: floating-point colour space distance
+    
+    Preconditions: both pixels have the same number of channels
+    '''
+    collect = 0
+    for i in range(len(pix1)):
+        collect += (pix1[i] - pix2[i])**2
+    return sqrt(collect)
+
+def expand(source, target, near):
     '''Expands the source texture into larger output
     
     Arguments:
     source -- Source Texture used to be expanded
     target -- Target Texture to guide expansion
+    near -- Shape used for comparisons
     
     Return: an Image containing the expanded texture
     '''
@@ -35,6 +53,12 @@ def expand(source, target):
     # make sure the target has the same mode as the source
     if (target.pic.mode != source.pic.mode):
         target.pic = target.pic.convert(source.pic.mode)
+        
+    # for i in source pixels, j in target pixels
+    # truncate shape list according to _goodList for each
+    # sum compares over each remaining in goodlist
+    # push (sum/len(goodlist), source pixel) into a list
+    # sort list, pick first
   
     # flatten pixel list into bytes and create an image
     targchannels = []
@@ -77,9 +101,10 @@ if __name__ == '__main__':
     # Create the texture expander
     source = Texture(source_image)
     target = Texture(target_image)
+    shape = SquareShape(2)
     
     # Perform the expansion
-    expansion = expand(source, target)
+    expansion = expand(source, target, shape)
     
     # Write the final image
     try:

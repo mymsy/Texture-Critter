@@ -21,6 +21,7 @@ work correctly.
 
 from texture import *
 from PIL import Image
+from random import randrange
 
 # using sets to test because order does not matter
 
@@ -33,10 +34,10 @@ squareTwo = {(-2, -2), (-2, -1), (-2, 0), (-2, 1), (-2, 2),
              (1, -2), (1, -1), (1, 0), (1, 1), (1, 2), 
              (2, -2), (2, -1), (2, 0), (2, 1), (2, 2)}
              
-ellOne = {(-1, -1), (-1, 0), (-1, 1), (0, -1)}
-ellTwo = {(-2, -2), (-2, -1), (-2, 0), (-2, 1), (-2, 2), 
-          (-1, -2), (-1, -1), (-1, 0), (-1, 1), (-1, 2), 
-          (0, -2), (0, -1)}
+ellOne = {(-1, -1), (0, -1), (1, -1), (-1, 0)}
+ellTwo = {(-2, -2), (-1, -2), (0, -2), (1, -2), (2, -2), 
+          (-2, -1), (-1, -1), (0, -1), (1, -1), (2, -1), 
+          (-2, 0), (-1, 0)}
              
 def test_base_empty():
     '''Test that the base class does not define any shifts'''
@@ -152,17 +153,26 @@ class TestTexMethods:
         assert not self.texture._locTest((x-1,y))
         assert not self.texture._locTest((x,y))
         
-    def testIndexSelf(self):
-        '''Test flat indexing function for self.pic.size'''
+    def testIndex(self):
+        '''Test flat indexing function'''
         x = self.texture.pic.size[0]
         y = self.texture.pic.size[1]
         assert self.texture._index((0,0)) == 0
-        assert self.texture._index((1,0)) == y
-        assert self.texture._index((x/2,y/2)) == x/2 * y + y/2
+        assert self.texture._index((1,0)) == 1
+        assert self.texture._index((0,1)) == x
+        assert self.texture._index((x/2,y/2)) == x/2 + y/2 * x
         assert (self.texture._index((x-1,y-1)) + 1
                 == self.texture.pic.size[0] * self.texture.pic.size[1])
         assert ((self.texture._index((x-1,y-1)) + 1) * self.texture.bpp 
                 == len(self.texture._bytes))
+        
+    def testIndexShift(self):
+        '''Test flat indexing function with shifts'''
+        x = self.texture.pic.size[0]
+        y = self.texture.pic.size[1]
+        assert self.texture._index((0,0), (1,1)) == x + 1
+        assert self.texture._index((0,1), (-1,0)) == x - 1
+        assert self.texture._index((0,y/2), (x/2,0)) == x/2 + y/2 * x
         
     def testListValid(self):
         '''Test neighbourhood function for valid slices'''
@@ -212,18 +222,25 @@ class TestTexMethods:
         x = self.texture.pic.size[0]
         y = self.texture.pic.size[1]
         
-        # zero through column 127, 1 column 128-255
-        semivalid = [0] * (x/2) * y + [1] * (x/2) * y
+        # zero through row 95, 1 rows 96-191
+        semivalid = [0] * x * (y/2) + [1] * x * (y/2)
         ell = EllShape(2)
         box = SquareShape(2)
 
-        assert (set(self.texture._goodList((x/2,0), box, semivalid)) ==
-                {(0, 0), (0, 1), (0, 2), 
-                 (1, 0), (1, 1), (1, 2), 
-                 (2, 0), (2, 1), (2, 2)})
+        assert (set(self.texture._goodList((0, y/2), box, semivalid)) ==
+                {(0, 0), (1, 0), (2, 0),
+                 (0, 1), (1, 1), (2, 1),
+                 (0, 2), (1, 2), (2, 2)})
         assert (set(self.texture._goodList((x/2,y/2), ell, semivalid)) ==
-                {(0, -2), (0, -1)})
-        assert (len(self.texture._goodList((x/2-1,y/2), box, semivalid)) == 10)
+                {(-2, 0), (-1, 0)})
+        assert (len(self.texture._goodList((x/2,y/2-1), box, semivalid)) == 10)
         assert (len(self.texture._goodList((x/2,y/2), box, semivalid)) == 15)
-        assert (len(self.texture._goodList((x/2+1,y/2), box, semivalid)) == 20)
+        assert (len(self.texture._goodList((x/2,y/2+1), box, semivalid)) == 20)
                         
+    def testGetPixel(self):
+        for _ in xrange(100):
+            x = randrange(self.texture.pic.size[0])
+            y = randrange(self.texture.pic.size[1])
+            assert (self.texture.getPixel((x,y)) == 
+                    self.texture.pic.getpixel((x,y)))
+        
