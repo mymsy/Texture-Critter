@@ -35,8 +35,8 @@ def compare(pix1, pix2):
     Preconditions: both pixels have the same number of channels
     '''
     collect = 0
-    for i in range(len(pix1)):
-        collect += (pix1[i] - pix2[i])**2
+    for pair in zip(pix1, pix2):
+        collect += (pair[0] - pair[1])**2
     return sqrt(collect)
 
 def expand(source, target, near):
