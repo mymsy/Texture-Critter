@@ -56,8 +56,8 @@ class Texture:
             # no alpha channel
             self.pic = image.convert("RGB")
             self.bpp = 3
-        self._bytes = bytearray(self.pic.tobytes())
-        self.pixels = self._pixelList(self._bytes)
+        self.pixels = self._pixelList(bytearray(self.pic.tobytes()))
+        self.valid = [1] * self.pic.size[0] * self.pic.size[1]
 
     def _pixelList(self, bytelist):
         '''Convert a list of bytes into an array of pixels.
@@ -102,19 +102,19 @@ class Texture:
         return ((pixel[0] + shift[0]) 
                 + (pixel[1] + shift[1]) * self.pic.size[0])
         
-    def _goodList(self, centre, neighbourhood, valid):
-        '''Create a list of initialised pixels from a Shape and a point
+    def goodList(self, centre, neighbourhood, valid):
+        '''Trim a list of shifts about a centre point
         
         Arguments:
         centre -- the centre of the region
         neighbourhood -- Shape surrounding the centre pixel 
         valid -- list of valid pixels
         
-        Returns: list of pixels defined by given shifts from the centre which
+        Returns: list of shifts from the centre which
             are both initialised and within the image
         '''
         ret = []
-        for shift in neighbourhood.shift:
+        for shift in neighbourhood:
             point = (centre[0] + shift[0], centre[1] + shift[1])
             if (self._locTest(point) 
                 and (valid[self._index(point)] != 0)):

@@ -81,8 +81,8 @@ def test_texture_creation_RGB():
     texRGB = Texture(colourjpg)
     assert texRGB.pic.mode == "RGB"
     assert texRGB.bpp == 3
-    assert (len(texRGB._bytes) ==
-            texRGB.bpp * texRGB.pic.size[0] * texRGB.pic.size[1])
+    assert (len(texRGB.pixels) ==
+            texRGB.pic.size[0] * texRGB.pic.size[1])
     
 def test_texture_creation_RGBA():
     '''Test that RGBA texture has proper mode conversion and size'''
@@ -90,8 +90,8 @@ def test_texture_creation_RGBA():
     texRGBA = Texture(colourpng)
     assert texRGBA.pic.mode == "RGBA"
     assert texRGBA.bpp == 4
-    assert (len(texRGBA._bytes) ==
-            texRGBA.bpp * texRGBA.pic.size[0] * texRGBA.pic.size[1])
+    assert (len(texRGBA.pixels) ==
+            texRGBA.pic.size[0] * texRGBA.pic.size[1])
     
 def test_texture_creation_BWA():
     '''Test that BW+A texture has proper mode conversion and size'''
@@ -99,8 +99,8 @@ def test_texture_creation_BWA():
     texBWA = Texture(bwapng)
     assert texBWA.pic.mode == "RGBA"
     assert texBWA.bpp == 4
-    assert (len(texBWA._bytes) ==
-            texBWA.bpp * texBWA.pic.size[0] * texBWA.pic.size[1])
+    assert (len(texBWA.pixels) ==
+            texBWA.pic.size[0] * texBWA.pic.size[1])
     
 def test_texture_creation_palette():
     '''Test that palette texture has proper mode conversion and size'''
@@ -108,8 +108,8 @@ def test_texture_creation_palette():
     texpal = Texture(colourgif)
     assert texpal.pic.mode == "RGBA"
     assert texpal.bpp == 4
-    assert (len(texpal._bytes) ==
-            texpal.bpp * texpal.pic.size[0] * texpal.pic.size[1])
+    assert (len(texpal.pixels) ==
+            texpal.pic.size[0] * texpal.pic.size[1])
     
 class TestTexMethods:
     '''Tests for Texture methods'''
@@ -129,7 +129,7 @@ class TestTexMethods:
         '''Test pixel list function'''
         # generated at object creation
         assert (len(self.texture.pixels) * self.texture.bpp
-                == len(self.texture._bytes))
+                == len(self.texture.pic.tobytes()))
         for p in self.texture.pixels:
             assert len(p) == self.texture.bpp
             
@@ -164,8 +164,8 @@ class TestTexMethods:
         assert self.texture._index((x/2,y/2)) == x/2 + y/2 * x
         assert (self.texture._index((x-1,y-1)) + 1
                 == self.texture.pic.size[0] * self.texture.pic.size[1])
-        assert ((self.texture._index((x-1,y-1)) + 1) * self.texture.bpp 
-                == len(self.texture._bytes))
+        assert ((self.texture._index((x-1,y-1)) + 1) 
+                == len(self.texture.pixels))
         
     def testIndexShift(self):
         '''Test flat indexing function with shifts'''
@@ -184,23 +184,23 @@ class TestTexMethods:
         box = SquareShape(2)
         
         # valid slices
-        assert self.texture._goodList((0,0), ell, valid) == []
-        assert (set(self.texture._goodList((0,0), box, valid)) ==
+        assert self.texture.goodList((0,0), ell.shift, valid) == []
+        assert (set(self.texture.goodList((0,0), box.shift, valid)) ==
                 {(0, 0), (0, 1), (0, 2), 
                  (1, 0), (1, 1), (1, 2), 
                  (2, 0), (2, 1), (2, 2)})
-        assert (set(self.texture._goodList((x-1,0), box, valid)) ==
+        assert (set(self.texture.goodList((x-1,0), box.shift, valid)) ==
                 {(-2, 0), (-2, 1), (-2, 2), 
                  (-1, 0), (-1, 1), (-1, 2), 
                  (0, 0),  (0, 1),  (0, 2)})
-        assert (set(self.texture._goodList((x-1,y-1), box, valid)) ==
+        assert (set(self.texture.goodList((x-1,y-1), box.shift, valid)) ==
                 {(-2, -2), (-2, -1), (-2, 0), 
                  (-1, -2), (-1, -1), (-1, 0), 
                  (0, -2),  (0, -1),  (0, 0)})
         # just test the length, should get all points
-        assert (len(self.texture._goodList((x/2,y/2), box, valid)) == 
+        assert (len(self.texture.goodList((x/2,y/2), box.shift, valid)) == 
                 len(box.shift))
-        assert (len(self.texture._goodList((x/2,y/2), ell, valid)) == 
+        assert (len(self.texture.goodList((x/2,y/2), ell.shift, valid)) == 
                 len(ell.shift))
         
     def testListInvalid(self):
@@ -211,12 +211,12 @@ class TestTexMethods:
         ell = EllShape(2)
         box = SquareShape(2)
 
-        assert self.texture._goodList((0,0), ell, invalid) == []
-        assert self.texture._goodList((0,0), box, invalid) == []
-        assert self.texture._goodList((x-1,y-1), ell, invalid) == []
-        assert self.texture._goodList((x-1,y-1), box, invalid) == []
-        assert self.texture._goodList((x/2,y/2), ell, invalid) == []
-        assert self.texture._goodList((x/2,y/2), box, invalid) == []
+        assert self.texture.goodList((0,0), ell.shift, invalid) == []
+        assert self.texture.goodList((0,0), box.shift, invalid) == []
+        assert self.texture.goodList((x-1,y-1), ell.shift, invalid) == []
+        assert self.texture.goodList((x-1,y-1), box.shift, invalid) == []
+        assert self.texture.goodList((x/2,y/2), ell.shift, invalid) == []
+        assert self.texture.goodList((x/2,y/2), box.shift, invalid) == []
         
     def testListSemivalid(self):
         '''Test neighbourhood function for semi-valid slices'''
@@ -228,15 +228,15 @@ class TestTexMethods:
         ell = EllShape(2)
         box = SquareShape(2)
 
-        assert (set(self.texture._goodList((0, y/2), box, semivalid)) ==
+        assert (set(self.texture.goodList((0, y/2), box.shift, semivalid)) ==
                 {(0, 0), (1, 0), (2, 0),
                  (0, 1), (1, 1), (2, 1),
                  (0, 2), (1, 2), (2, 2)})
-        assert (set(self.texture._goodList((x/2,y/2), ell, semivalid)) ==
+        assert (set(self.texture.goodList((x/2,y/2), ell.shift, semivalid)) ==
                 {(-2, 0), (-1, 0)})
-        assert (len(self.texture._goodList((x/2,y/2-1), box, semivalid)) == 10)
-        assert (len(self.texture._goodList((x/2,y/2), box, semivalid)) == 15)
-        assert (len(self.texture._goodList((x/2,y/2+1), box, semivalid)) == 20)
+        assert (len(self.texture.goodList((x/2,y/2-1), box.shift, semivalid)) == 10)
+        assert (len(self.texture.goodList((x/2,y/2), box.shift, semivalid)) == 15)
+        assert (len(self.texture.goodList((x/2,y/2+1), box.shift, semivalid)) == 20)
                         
     def testGetPixel(self):
         '''Test pixel getter function'''

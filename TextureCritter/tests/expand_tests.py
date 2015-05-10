@@ -40,12 +40,13 @@ class TestExpandMethods:
         '''Teardown'''
         del self.source, self.target
     
-    def testExpansion(self):
-        '''Test expansion function numeric output'''
-        # TODO fill this in when expand is done
-        result = expand(self.source, self.target, self.shape)
-        assert result.size == self.target.pic.size
-        assert result.mode == self.source.pic.mode
+    # REDACTED - takes too long
+#     def testExpansion(self):
+#         '''Test expansion function numeric output'''
+#         # TODO fill this in when expand is done
+#         result = expand(self.source, self.target, self.shape)
+#         assert result.size == self.target.pic.size
+#         assert result.mode == self.source.pic.mode
 
     def testCompare(self):
         '''Test pixel comparison'''

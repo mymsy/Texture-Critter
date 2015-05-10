@@ -17,14 +17,14 @@
 Author: mym
 '''
 
-from PIL import Image
+from __future__ import print_function
 from math import sqrt
 import argparse
 
 from texture import *
 
 def compare(pix1, pix2):
-    '''Compare two pixels, returning the colour-space distance between
+    '''Compare two pixels, returning square of the colour-space distance between
     
     Arguments:
     pix1 -- tuple containing the channels of the first pixel
@@ -38,7 +38,34 @@ def compare(pix1, pix2):
     collect = 0
     for pair in zip(pix1, pix2):
         collect += (pair[0] - pair[1])**2
-    return sqrt(collect)
+    return collect
+
+def compareRegion(tex1, tex2, cen1, cen2, region):
+    '''Compare regions of two Textures.
+    Returns the weighted sum of colour-space distances between corresponding
+    pixels, or Infinity if no pixels can be compared.
+    
+    Arguments:
+    tex1, tex2 -- Textures to compare
+    cen1, cen2 -- 2-tuple centres of comparison regions
+    region -- list of 2-tuple shifts defining points for comparison
+    
+    Returns: floating-point weighted sum of distances
+    
+    Preconditions: region is valid about cen in both textures (untested)
+    '''
+    # abort if nothing to compare (avoid divide-by-zero)
+    if (len(region) == 0): return float('inf')
+    
+    # loop over shifts
+    total = 0
+    for shift in region:
+        p1 = tex1.getPixel(cen1, shift)
+        p2 = tex2.getPixel(cen2, shift)
+        total += compare(p1, p2)
+    
+    # weight by number of points compared
+    return total/len(region)
 
 def expand(source, target, near):
     '''Expands the source texture into larger output
@@ -54,12 +81,46 @@ def expand(source, target, near):
     # make sure the target has the same mode as the source
     if (target.pic.mode != source.pic.mode):
         target.pic = target.pic.convert(source.pic.mode)
+            
+    # lists of all pixels in source, target for flatter iteration
+    slist = [(x,y) 
+             for y in range(source.pic.size[1])
+             for x in range(source.pic.size[0])]
+    tlist = [(x,y)
+             for y in range(target.pic.size[1])
+             for x in range(target.pic.size[0])]
+
+    # for each target pixel...    
+    for tloc in tlist:
+        # trim neighbourhood around this point
+        nearer = target.goodList(tloc, near.shift, target.valid)
         
-    # for i in source pixels, j in target pixels
-    # truncate shape list according to _goodList for each
-    # sum compares over each remaining in goodlist
-    # push (sum/len(goodlist), source pixel) into a list
-    # sort list, pick first
+        # clear list of choices
+        choices = []
+        
+        # loop over all source pixels
+        for sloc in slist:
+            # trim above neighbourhood around this point
+            nearest = source.goodList(sloc, nearer, source.valid)
+
+            # weighted texture distance of remaning region
+            weight = compareRegion(source, target, sloc, tloc, nearest)
+            
+            # add tuple of weight and source pixel to choices
+            choices.append((weight, source.getPixel(sloc)))
+            
+        # sort list, pick first
+        # TODO this gives lexical sort; want stable sort on only first element 
+        # TODO weighted random choice
+        choices.sort()
+        newval = choices[0][1]
+        
+        # set the pixel!
+        target.setPixel(newval, tloc)
+        
+        # progress?
+        print(".", end = "")
+        if (tloc[0] == source.pic.size[0]): print("\n")
 
     # convert to an Image and return  
     return target.toImage()    
@@ -85,20 +146,20 @@ if __name__ == '__main__':
     try:
         source_image = Image.open(args.input_file)
     except IOError:
-        print "Could not open input image file", args.input_file
+        print("Could not open input image file", args.input_file)
         exit(1)
     
     # Read the target image
     try:
         target_image = Image.open(args.target_file)
     except IOError:
-        print "Could not open target image file", args.target_file
+        print("Could not open target image file", args.target_file)
         exit(1)
     
     # Create the texture expander
     source = Texture(source_image)
     target = Texture(target_image)
-    shape = SquareShape(2)
+    shape = SquareShape(1)
     
     # Perform the expansion
     expansion = expand(source, target, shape)
@@ -107,7 +168,7 @@ if __name__ == '__main__':
     try:
         expansion.save(args.output_file)
     except IOError:
-        print "Could not write output image file", args.output_file
+        print("Could not write output image file", args.output_file)
         exit(1)
         
     exit(0)
