@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from compiler.ast import Function
 
 '''Tests for module texture.py
 
@@ -238,9 +239,30 @@ class TestTexMethods:
         assert (len(self.texture._goodList((x/2,y/2+1), box, semivalid)) == 20)
                         
     def testGetPixel(self):
+        '''Test pixel getter function'''
         for _ in xrange(100):
             x = randrange(self.texture.pic.size[0])
             y = randrange(self.texture.pic.size[1])
             assert (self.texture.getPixel((x,y)) == 
                     self.texture.pic.getpixel((x,y)))
+     
+    def testSetPixel(self):
+        '''Test pixel setter function'''
+        throwaway = Texture(self.texture.pic)
+        for _ in xrange(100):
+            value = tuple([randrange(255) for _ in xrange(self.texture.bpp)])
+            x = randrange(self.texture.pic.size[0])
+            y = randrange(self.texture.pic.size[1])
+            throwaway.setPixel(value, (x,y))
+            assert (throwaway.getPixel((x,y)) == value) 
+
+    def testToImage(self):
+        '''Test Image output Function'''
+        result = self.texture.toImage()
+        assert result.size == self.texture.pic.size
+        assert result.mode == self.texture.pic.mode
+        for _ in xrange(100):
+            x = randrange(self.texture.pic.size[0])
+            y = randrange(self.texture.pic.size[1])
+            assert (self.texture.getPixel((x,y)) == result.getpixel((x,y)))                     
         

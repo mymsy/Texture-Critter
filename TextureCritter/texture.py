@@ -18,7 +18,7 @@ class Texture -- performs texture synthesis
 class Shape -- defines the sampling shape for texture region comparison
 '''
 
-#from PIL import Image
+from PIL import Image
 
 class Texture:
     '''A texture synthesis object
@@ -70,12 +70,13 @@ class Texture:
         
         Preconditions: len(bytes) is a multiple of bpp
         '''
+        assert len(bytelist) % self.bpp == 0
         pixlist = []
         for i in range(0, len(bytelist), self.bpp):
             pixlist.append(tuple(bytelist[i:i+self.bpp]))
         return pixlist
         
-    def _locTest(self, point):
+    def _locTest(self, point, shift = (0,0)):
         '''Test whether a pixel is within this image
         
         Arguments:
@@ -83,8 +84,10 @@ class Texture:
         
         Returns: true if the pixel is within the image, false if not
         '''        
-        return ((point[0] >= 0) and (point[0] < self.pic.size[0]) and 
-                (point[1] >= 0) and (point[1] < self.pic.size[1]))
+        return ((point[0] + shift[0] >= 0) 
+                and (point[0] + shift[0] < self.pic.size[0]) 
+                and (point[1] + shift[1] >= 0) 
+                and (point[1] + shift[1] < self.pic.size[1]))
         
     def _index(self, pixel, shift = (0, 0)):
         '''Determine the index into flat vectors for a given pixel
@@ -129,8 +132,41 @@ class Texture:
         
         Preconditions: loc + shift is inside the image
         '''
+        assert self._locTest(loc, shift)
         return self.pixels[self._index(loc, shift)]
+    
+    def setPixel(self, value, loc, shift = (0,0)):
+        '''Set the pixel at given location and shift
         
+        Arguments:
+        value -- tuple containing channels of the pixel
+        loc -- 2-tuple pixel location
+        shift -- 2-tuple shift from location (def. (0,0))
+        
+        Preconditions: len(value) = self.bpp; loc + shift is inside the image
+        '''
+        assert self._locTest(loc, shift)
+        assert len(value) == self.bpp
+        self.pixels[self._index(loc,shift)] = value
+    
+    def toImage(self):
+        '''Output this texture data into an Image
+        
+        Returns: an Image in the same encoding as the source containing
+            this texture's data
+        '''
+        # flatten pixel list
+        channels = []
+        for p in self.pixels: 
+            channels += list(p)
+            
+        # convert to byte buffer
+        outbytes = buffer(bytearray(channels))
+        
+        # create Image
+        return Image.frombytes(self.pic.mode, self.pic.size, outbytes)
+
+    
 class Shape:
     '''Defines a region for texture comparison.
         

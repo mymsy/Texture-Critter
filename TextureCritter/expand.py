@@ -34,6 +34,7 @@ def compare(pix1, pix2):
     
     Preconditions: both pixels have the same number of channels
     '''
+    assert len(pix1) == len(pix2)
     collect = 0
     for pair in zip(pix1, pix2):
         collect += (pair[0] - pair[1])**2
@@ -59,13 +60,9 @@ def expand(source, target, near):
     # sum compares over each remaining in goodlist
     # push (sum/len(goodlist), source pixel) into a list
     # sort list, pick first
-  
-    # flatten pixel list into bytes and create an image
-    targchannels = []
-    for p in target.pixels: 
-        targchannels += list(p)
-    targbytes = buffer(bytearray(targchannels))
-    return Image.frombytes(target.pic.mode, target.pic.size, targbytes)    
+
+    # convert to an Image and return  
+    return target.toImage()    
 
 if __name__ == '__main__':
     # use the first line of the docstring as the program description
