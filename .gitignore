@@ -1,5 +1,6 @@
 # bytecode
 *.pyc
+*.pyo
 
 # images
 textures/
