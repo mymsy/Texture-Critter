@@ -119,8 +119,9 @@ def expand(source, target, near):
         target.setPixel(newval, tloc)
         
         # progress?
+        if (tloc[0] == 0): print("row ", tloc[1], end = "")
         print(".", end = "")
-        if (tloc[0] == source.pic.size[0]): print("\n")
+        if (tloc[0] == source.pic.size[0] - 1): print()
 
     # convert to an Image and return  
     return target.toImage()    
@@ -159,7 +160,7 @@ if __name__ == '__main__':
     # Create the texture expander
     source = Texture(source_image)
     target = Texture(target_image)
-    shape = SquareShape(1)
+    shape = SquareShape(2)
     
     # Perform the expansion
     expansion = expand(source, target, shape)
