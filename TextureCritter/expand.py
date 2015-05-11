@@ -140,6 +140,9 @@ if __name__ == '__main__':
         # neighbourhood size (default ?)
         # randomisation method (default none)
     parser.add_argument("target_file", help="image for target of synthesis")
+    
+    # activate profiler
+    parser.add_argument("--prof", help = "run profiler and save results")
 
     args = parser.parse_args()
 
@@ -163,7 +166,11 @@ if __name__ == '__main__':
     shape = SquareShape(2)
     
     # Perform the expansion
-    expansion = expand(source, target, shape)
+    if (args.prof == None):
+        expansion = expand(source, target, shape)
+    else:
+        import cProfile
+        cProfile.run("expansion = expand(source, target, shape)", args.prof)
     
     # Write the final image
     try:
