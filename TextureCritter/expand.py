@@ -141,18 +141,22 @@ if __name__ == '__main__':
     parser.add_argument("output_file", help="the destination file")
     
     # TODO gonna need to read some options
-        # targeted synthesis default off (starting with it necessary)
         # gaussian weighting (default flat)
         # neighbourhood size (default ?)
         # randomisation method (default none)
         
     # targeted synthesis
-    parser.add_argument("-target", dest="target_file", help="image for target of synthesis")
+    parser.add_argument("-target", dest="target_file", 
+                        help="image for target of synthesis")
     # untargeted synthesis scale
     parser.add_argument("-scale", default = 2, type = int,
                         help="Scale factor for generated texture (ignored if targeted)")
+    # neighbourhood size
+    parser.add_argument("-nsize", default = 2, type = int,
+                        help = "Size of neighbourhood used in comparisons")
     # activate profiler
-    parser.add_argument("--prof", help = "run profiler and save results")
+    parser.add_argument("-prof", metavar = "filename", 
+                        help = "run profiler and save results")
 
     args = parser.parse_args()
 
@@ -164,12 +168,15 @@ if __name__ == '__main__':
         print("Could not open input image file", args.input_file)
         exit(1)
     
-    # Create target image
+    # Create target image and neighbourhood
+    # SquareShape for targeted (looks ahead), 
+    # EllShape for untargeted (only looks at initialised)
     if (args.target_file != None):
         # read from file if one is specified
         try:
             target_image = Image.open(args.target_file)
             target = texture.Texture(target_image)
+            shape = texture.SquareShape(args.nsize)
         except IOError:
             print("Could not open target image file", args.target_file)
             exit(1)
@@ -178,10 +185,8 @@ if __name__ == '__main__':
         tsize = (args.scale * source_image.size[0],
                  args.scale * source_image.size[1])
         target = texture.EmptyTexture(tsize, source_image.mode)
-        
-    # Create the neighbourhood
-    shape = texture.SquareShape(2)
-    
+        shape = texture.EllShape(args.nsize)
+            
     # Perform the expansion
     if (args.prof == None):
         expansion = expand(source, target, shape)
