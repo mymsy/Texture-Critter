@@ -19,6 +19,7 @@ class Shape -- defines the sampling shape for texture region comparison
 '''
 
 from PIL import Image
+import itertools
 
 class Texture:
     '''A texture synthesis object
@@ -144,10 +145,22 @@ class Texture:
         shift -- 2-tuple shift from location (def. (0,0))
         
         Preconditions: len(value) = self.bpp; loc + shift is inside the image
+        Postconditions: pixel at loc + shift is set to value
         '''
         assert self._locTest(loc, shift)
         assert len(value) == self.bpp
         self.pixels[self._index(loc,shift)] = value
+        
+    def setValid(self, loc):
+        '''Set valid flag for pixel at a given location
+        
+        Arguments:
+        loc -- 2-tuple pixel location
+        
+        Preconditions: loc is inside the image
+        Postcondition: valid flag for pixel at loc is set to 1 
+        '''
+        self.valid[self._index(loc)] = 1
     
     def toImage(self):
         '''Output this texture data into an Image
@@ -156,17 +169,44 @@ class Texture:
             this texture's data
         '''
         # flatten pixel list
-        channels = []
-        for p in self.pixels: 
-            channels += list(p)
-            
+        channels = itertools.chain.from_iterable(self.pixels)
+                    
         # convert to byte buffer
         outbytes = buffer(bytearray(channels))
-        
+                
         # create Image
         return Image.frombytes(self.pic.mode, self.pic.size, outbytes)
 
+class EmptyTexture(Texture):
+    '''Empty texture synthesis object for untargetted synthesis.
     
+    Inherits from Texture
+    '''
+    
+    def __init__(self, size, mode):
+        '''Constructor
+        
+        Creates this EmptyTexture with blank target and all pixels 
+        uninitialised. A blank image is created as backing, in either
+        RGB or RGBA mode
+        
+        Arguments:
+        size -- 2-tuple (width, height) size for the Texture
+        mode -- string mode of the new Texture, RGB or RGBA 
+        '''
+        
+        if (mode in Texture.alpha_modes):  
+            # alpha channel included
+            self.bpp = 4
+            colour = (0, 0, 0, 0)  
+        else:
+            # no alpha channel
+            self.bpp = 3
+            colour = (0, 0, 0)
+        self.pic = Image.new(mode, size)
+        self.pixels = [colour] * size[0] * size[1]
+        self.valid = [0] * size[0] * size[1]
+
 class Shape:
     '''Defines a region for texture comparison.
         

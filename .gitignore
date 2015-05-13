@@ -9,3 +9,6 @@ textures/
 # eclipse files
 .project
 .pydevproject
+
+# profiler output
+profiler.out

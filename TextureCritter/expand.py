@@ -18,10 +18,11 @@ Author: mym
 '''
 
 from __future__ import print_function
-from math import sqrt
+#from math import sqrt
+from PIL import Image
 import argparse
-
-from texture import *
+import texture
+#import random
 
 def compare(pix1, pix2):
     '''Compare two pixels, returning square of the colour-space distance between
@@ -110,19 +111,24 @@ def expand(source, target, near):
             choices.append((weight, source.getPixel(sloc)))
             
         # sort list, pick first
-        # TODO this gives lexical sort; want stable sort on only first element 
+        # TODO this gives lexical sort; want stable sort on only first element
+        # actually stable gives preference to input order, 
+        # lexical gives preference to colour in RGB order
+        # what order is actually desired? (probably random) 
         # TODO weighted random choice
         choices.sort()
         newval = choices[0][1]
+        # shitty randomness - random of first ten
+        #newval = choices[random.randrange(10)][1]
         
         # set the pixel!
         target.setPixel(newval, tloc)
+        target.setValid(tloc)
         
         # progress?
-        if (tloc[0] == 0): print("row ", tloc[1], end = "")
+        if (tloc[0] == 0): print("\nrow ", tloc[1], end = "")
         print(".", end = "")
-        if (tloc[0] == source.pic.size[0] - 1): print()
-
+        
     # convert to an Image and return  
     return target.toImage()    
 
@@ -139,8 +145,12 @@ if __name__ == '__main__':
         # gaussian weighting (default flat)
         # neighbourhood size (default ?)
         # randomisation method (default none)
-    parser.add_argument("target_file", help="image for target of synthesis")
-    
+        
+    # targeted synthesis
+    parser.add_argument("-target", dest="target_file", help="image for target of synthesis")
+    # untargeted synthesis scale
+    parser.add_argument("-scale", default = 2, type = int,
+                        help="Scale factor for generated texture (ignored if targeted)")
     # activate profiler
     parser.add_argument("--prof", help = "run profiler and save results")
 
@@ -149,21 +159,28 @@ if __name__ == '__main__':
     # Read the source image
     try:
         source_image = Image.open(args.input_file)
+        source = texture.Texture(source_image)
     except IOError:
         print("Could not open input image file", args.input_file)
         exit(1)
     
-    # Read the target image
-    try:
-        target_image = Image.open(args.target_file)
-    except IOError:
-        print("Could not open target image file", args.target_file)
-        exit(1)
-    
-    # Create the texture expander
-    source = Texture(source_image)
-    target = Texture(target_image)
-    shape = SquareShape(2)
+    # Create target image
+    if (args.target_file != None):
+        # read from file if one is specified
+        try:
+            target_image = Image.open(args.target_file)
+            target = texture.Texture(target_image)
+        except IOError:
+            print("Could not open target image file", args.target_file)
+            exit(1)
+    else:
+        # no target specified, create a blank one
+        tsize = (args.scale * source_image.size[0],
+                 args.scale * source_image.size[1])
+        target = texture.EmptyTexture(tsize, source_image.mode)
+        
+    # Create the neighbourhood
+    shape = texture.SquareShape(2)
     
     # Perform the expansion
     if (args.prof == None):
