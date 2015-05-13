@@ -14,13 +14,17 @@
 
 '''A program for playing with texture expansion. 
 
+Methods:
+compare -- find (square of) colour-space distance between two pixels
+compareRegion -- find weighted sum of colour-space distances between all
+    pixels in two texture regions
+expand -- expand one texture into another
+
 Author: mym
 '''
 
 from __future__ import print_function
 #from math import sqrt
-from PIL import Image
-import argparse
 import texture
 #import random
 
@@ -31,7 +35,7 @@ def compare(pix1, pix2):
     pix1 -- tuple containing the channels of the first pixel
     pix2 -- tuple containing the channels of the second pixel
     
-    Return: floating-point colour space distance
+    Return: square of colour space distance
     
     Preconditions: both pixels have the same number of channels
     '''
@@ -66,7 +70,7 @@ def compareRegion(tex1, tex2, cen1, cen2, region):
         total += compare(p1, p2)
     
     # weight by number of points compared
-    return total/len(region)
+    return float(total)/len(region)
 
 def expand(source, target, near):
     '''Expands the source texture into larger output
@@ -116,6 +120,7 @@ def expand(source, target, near):
         # lexical gives preference to colour in RGB order
         # what order is actually desired? (probably random) 
         # TODO weighted random choice
+        # sorting actually unnecessary, even for randomness
         choices.sort()
         newval = choices[0][1]
         # shitty randomness - random of first ten
@@ -133,6 +138,10 @@ def expand(source, target, near):
     return target.toImage()    
 
 if __name__ == '__main__':
+    # additional imports
+    import argparse
+    from PIL import Image
+
     # use the first line of the docstring as the program description
     parser = argparse.ArgumentParser(description = __doc__.splitlines()[0])
     
@@ -142,7 +151,6 @@ if __name__ == '__main__':
     
     # TODO gonna need to read some options
         # gaussian weighting (default flat)
-        # neighbourhood size (default ?)
         # randomisation method (default none)
         
     # targeted synthesis

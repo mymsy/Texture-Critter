@@ -12,10 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-'''Texture synthesis machinery
+'''Texture synthesis helper classes
 
-class Texture -- performs texture synthesis
-class Shape -- defines the sampling shape for texture region comparison
+class Texture -- provides functions for working with a base PIL.Image
+class EmptyTexture (subclasses Texture) -- a Texture variation that starts
+    empty, with all pixels marked as uninitialised
+
+class Shape -- generic base class to define the sampling shape for texture 
+    region comparison
+class SquareShape (subclasses Shape) -- defines a square Shape of given radius
+class EllShape (subclasses Shape) -- defines an L-shaped Shape (rows above
+    and columns to the left on the same row) of given radius
 '''
 
 from PIL import Image
@@ -25,6 +32,12 @@ class Texture:
     '''A texture synthesis object
     
     Methods:
+    goodList -- filter a list of shifts about a point to only those within the
+        Texture
+    getPixel -- get the pixel at a given location
+    setPixel -- set the pixel at given location to given value
+    setValid -- set the pixel at given location as valid
+    toImage -- output this Texture as an Image
     
     Class variables:
     alpha_modes -- image modes implementing transparency
@@ -65,7 +78,6 @@ class Texture:
         
         Arguments:
         bytelist -- list of bytes
-        bpp -- number of bytes per pixel
         
         Returns: list of bpp-tuples, each corresponding to a pixel
         
@@ -81,7 +93,8 @@ class Texture:
         '''Test whether a pixel is within this image
         
         Arguments:
-        point -- the pixel to be tested
+        point -- 2-tuple pixel location to be tested
+        shift -- 2-tuple shift from loation (def. (0,0))
         
         Returns: true if the pixel is within the image, false if not
         '''        
@@ -107,9 +120,9 @@ class Texture:
         '''Trim a list of shifts about a centre point
         
         Arguments:
-        centre -- the centre of the region
-        neighbourhood -- Shape surrounding the centre pixel 
-        valid -- list of valid pixels
+        centre -- 2-tuple location of the centre of the region
+        neighbourhood -- list of 2-tuple shifts surrounding the centre pixel 
+        valid -- list mapping integer locations to validity
         
         Returns: list of shifts from the centre which
             are both initialised and within the image
@@ -180,7 +193,7 @@ class Texture:
 class EmptyTexture(Texture):
     '''Empty texture synthesis object for untargetted synthesis.
     
-    Inherits from Texture
+    Inherits from Texture. No new methods or variables.
     '''
     
     def __init__(self, size, mode):
