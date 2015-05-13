@@ -41,7 +41,10 @@ class Texture:
     
     Class variables:
     alpha_modes -- image modes implementing transparency
-    pic -- the source image for expansion, converted to RGB(A) palette   
+    pic -- the source image for expansion, converted to RGB(A) palette
+    bpp -- number of bits used for each pixel, 3 or 4
+    pixels -- list of bpp-tuple pixels
+    valid -- list of booleans giving whether a pixel is considered initialised    
     '''
 
     # image modes that support transparency
@@ -71,7 +74,7 @@ class Texture:
             self.pic = image.convert("RGB")
             self.bpp = 3
         self.pixels = self._pixelList(bytearray(self.pic.tobytes()))
-        self.valid = [1] * self.pic.size[0] * self.pic.size[1]
+        self.valid = [True] * self.pic.size[0] * self.pic.size[1]
 
     def _pixelList(self, bytelist):
         '''Convert a list of bytes into an array of pixels.
@@ -131,7 +134,7 @@ class Texture:
         for shift in neighbourhood:
             point = (centre[0] + shift[0], centre[1] + shift[1])
             if (self._locTest(point) 
-                and (valid[self._index(point)] != 0)):
+                and valid[self._index(point)]):
                 ret.append(shift)
         return ret
     
@@ -173,7 +176,7 @@ class Texture:
         Preconditions: loc is inside the image
         Postcondition: valid flag for pixel at loc is set to 1 
         '''
-        self.valid[self._index(loc)] = 1
+        self.valid[self._index(loc)] = True
     
     def toImage(self):
         '''Output this texture data into an Image
@@ -218,7 +221,7 @@ class EmptyTexture(Texture):
             colour = (0, 0, 0)
         self.pic = Image.new(mode, size)
         self.pixels = [colour] * size[0] * size[1]
-        self.valid = [0] * size[0] * size[1]
+        self.valid = [False] * size[0] * size[1]
 
 class Shape:
     '''Defines a region for texture comparison.

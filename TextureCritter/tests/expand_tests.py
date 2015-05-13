@@ -19,10 +19,9 @@ TextureCritter as the working directory in order for the image paths to
 work correctly.
 '''
 
-from expand import expand, compare
+from expand import compare
 from texture import Texture, SquareShape
 from PIL import Image
-from math import sqrt
 
 class TestExpandMethods:
     '''Tests for Expand methods'''

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from compiler.ast import Function
 
 '''Tests for module texture.py
 
@@ -21,7 +20,6 @@ work correctly.
 '''
 
 from texture import *
-from PIL import Image
 from random import randrange
 
 # using sets to test because order does not matter
@@ -179,7 +177,7 @@ class TestTexMethods:
         '''Test neighbourhood function for valid slices'''
         x = self.texture.pic.size[0]
         y = self.texture.pic.size[1]
-        valid = [1] * x * y
+        valid = [True] * x * y
         ell = EllShape(2)
         box = SquareShape(2)
         
@@ -207,7 +205,7 @@ class TestTexMethods:
         '''Test neighbourhood function for invalid slices'''
         x = self.texture.pic.size[0]
         y = self.texture.pic.size[1]
-        invalid = [0] * x * y
+        invalid = [False] * x * y
         ell = EllShape(2)
         box = SquareShape(2)
 
@@ -224,7 +222,7 @@ class TestTexMethods:
         y = self.texture.pic.size[1]
         
         # zero through row 95, 1 rows 96-191
-        semivalid = [0] * x * (y/2) + [1] * x * (y/2)
+        semivalid = [False] * x * (y/2) + [True] * x * (y/2)
         ell = EllShape(2)
         box = SquareShape(2)
 
