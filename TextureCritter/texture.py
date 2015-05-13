@@ -74,7 +74,7 @@ class Texture:
             self.pic = image.convert("RGB")
             self.bpp = 3
         self.pixels = self._pixelList(bytearray(self.pic.tobytes()))
-        self.valid = [True] * self.pic.size[0] * self.pic.size[1]
+        self.valid = [True] * (self.pic.size[0] * self.pic.size[1])
 
     def _pixelList(self, bytelist):
         '''Convert a list of bytes into an array of pixels.
@@ -194,7 +194,7 @@ class Texture:
         return Image.frombytes(self.pic.mode, self.pic.size, outbytes)
 
 class EmptyTexture(Texture):
-    '''Empty texture synthesis object for untargetted synthesis.
+    '''Empty texture synthesis object for untargeted synthesis.
     
     Inherits from Texture. No new methods or variables.
     '''
@@ -221,7 +221,7 @@ class EmptyTexture(Texture):
             colour = (0, 0, 0)
         self.pic = Image.new(mode, size)
         self.pixels = [colour] * size[0] * size[1]
-        self.valid = [False] * size[0] * size[1]
+        self.valid = [False] * (size[0] * size[1])
 
 class Shape:
     '''Defines a region for texture comparison.
