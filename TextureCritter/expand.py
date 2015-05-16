@@ -41,11 +41,35 @@ def compare(pix1, pix2):
     '''
     assert len(pix1) == len(pix2)
     collect = 0
-    for pair in zip(pix1, pix2):
-        collect += (pair[0] - pair[1])**2
+    for i in xrange(len(pix1)):
+        collect += (pix1[i] - pix2[i])**2
     return collect
 
-def compareRegion(tex1, tex2, cen1, cen2, region):
+def compare3(pix1, pix2):
+    '''Compare two 3-bit pixels, returning square of the colour-space distance between
+    
+    Arguments:
+    pix1 -- 3-tuple containing the channels of the first pixel
+    pix2 -- 3-tuple containing the channels of the second pixel
+    
+    Return: square of colour space distance
+    '''
+    return ((pix1[0] - pix2[0])**2 + (pix1[1] - pix2[1])**2 
+            + (pix1[2] - pix2[2])**2) 
+
+def compare4(pix1, pix2):
+    '''Compare two 4-bit pixels, returning square of the colour-space distance between
+    
+    Arguments:
+    pix1 -- 4-tuple containing the channels of the first pixel
+    pix2 -- 4-tuple containing the channels of the second pixel
+    
+    Return: square of colour space distance
+    '''
+    return ((pix1[0] - pix2[0])**2 + (pix1[1] - pix2[1])**2 
+            + (pix1[2] - pix2[2])**2 + (pix1[3] - pix2[3])**2) 
+
+def compareRegion(tex1, tex2, cen1, cen2, region, comp):
     '''Compare regions of two Textures.
     Returns the weighted sum of colour-space distances between corresponding
     pixels, or Infinity if no pixels can be compared.
@@ -54,6 +78,7 @@ def compareRegion(tex1, tex2, cen1, cen2, region):
     tex1, tex2 -- Textures to compare
     cen1, cen2 -- 2-tuple centres of comparison regions
     region -- list of 2-tuple shifts defining points for comparison
+    comp -- pixel comparison function
     
     Returns: floating-point weighted sum of distances
     
@@ -67,7 +92,7 @@ def compareRegion(tex1, tex2, cen1, cen2, region):
     for shift in region:
         p1 = tex1.getPixel(cen1, shift)
         p2 = tex2.getPixel(cen2, shift)
-        total += compare(p1, p2)
+        total += comp(p1, p2)
     
     # weight by number of points compared
     return float(total)/len(region)
@@ -86,14 +111,22 @@ def expand(source, target, near):
     # make sure the target has the same mode as the source
     if (target.pic.mode != source.pic.mode):
         target.pic = target.pic.convert(source.pic.mode)
+        
+    # choose appropriate pixel comparison function
+    if (source.bpp == 3):
+        comp = compare3
+    elif (source.bpp == 4):
+        comp = compare4
+    else:
+        comp = compare
             
     # lists of all pixels in source, target for flatter iteration
     slist = [(x,y) 
-             for y in range(source.pic.size[1])
-             for x in range(source.pic.size[0])]
+             for y in xrange(source.pic.size[1])
+             for x in xrange(source.pic.size[0])]
     tlist = [(x,y)
-             for y in range(target.pic.size[1])
-             for x in range(target.pic.size[0])]
+             for y in xrange(target.pic.size[1])
+             for x in xrange(target.pic.size[0])]
 
     # for each target pixel...    
     for tloc in tlist:
@@ -109,7 +142,7 @@ def expand(source, target, near):
             nearest = source.goodList(sloc, nearer, source.valid)
 
             # weighted texture distance of remaning region
-            weight = compareRegion(source, target, sloc, tloc, nearest)
+            weight = compareRegion(source, target, sloc, tloc, nearest, comp)
             
             # add tuple of weight and source pixel to choices
             choices.append((weight, source.getPixel(sloc)))

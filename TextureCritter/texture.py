@@ -270,8 +270,8 @@ class SquareShape(Shape):
         Postconditions: self.shift contains the appropriate shifts
         '''
         self.shift = [(i,j) 
-                      for i in range(-radius, radius+1) 
-                      for j in range(-radius, radius+1)] 
+                      for i in xrange(-radius, radius+1) 
+                      for j in xrange(-radius, radius+1)] 
 
 class EllShape(Shape):
     '''Defines a half-square Shape of given radius.
@@ -297,7 +297,7 @@ class EllShape(Shape):
         # comparison is j < 0 (prior row) 
         # or j == 0 and i < 0 (same row prior column)
         self.shift = [(i,j)
-                      for j in range(-radius, 1)
-                      for i in range(-radius, radius+1)
+                      for j in xrange(-radius, 1)
+                      for i in xrange(-radius, radius+1)
                       if ((j < 0) or (j == 0 and i < 0))]
         

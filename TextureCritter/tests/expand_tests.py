@@ -19,7 +19,7 @@ TextureCritter as the working directory in order for the image paths to
 work correctly.
 '''
 
-from expand import compare
+from expand import compare, compare3, compare4
 from texture import Texture, SquareShape
 from PIL import Image
 
@@ -48,7 +48,7 @@ class TestExpandMethods:
 #         assert result.mode == self.source.pic.mode
 
     def testCompare(self):
-        '''Test pixel comparison'''
+        '''Test generic pixel comparison'''
         cases = [((0, 0, 0), (0, 0, 0), 0),
                  ((0,0), (3,4), 5**2),
                  ((1,2,3), (4,5,6), 27),
@@ -59,3 +59,24 @@ class TestExpandMethods:
         for c in cases:
             # threshold test for floating point roundoff
             assert(abs(compare(c[0], c[1]) - c[2]) < 1e-8)
+            
+    def testCompare3(self):
+        '''Test 3-channel pixel comparison'''
+        cases = [((0,0,0), (0,0,0), 0),
+                 ((0,0,0), (255,255,255), 3 * 255**2),
+                 ((255,255,255), (255,255,255), 0),
+                 ((1,3,5), (3,5,7), 12)]
+        for c in cases:
+            # threshold test for floating point roundoff
+            assert(abs(compare3(c[0], c[1]) - c[2]) < 1e-8)
+
+    def testCompare4(self):
+        '''Test 4-channel pixel comparison'''
+        cases = [((0,0,0,0), (0,0,0,0), 0),
+                 ((0,0,0,0), (255,255,255,255), 4 * 255**2),
+                 ((255,255,255,255), (255,255,255,255), 0),
+                 ((1,3,5,7), (3,5,7,9), 16)]
+        for c in cases:
+            # threshold test for floating point roundoff
+            assert(abs(compare4(c[0], c[1]) - c[2]) < 1e-8)
+            
