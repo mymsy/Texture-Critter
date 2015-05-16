@@ -79,8 +79,6 @@ def test_texture_creation_RGB():
     texRGB = Texture(colourjpg)
     assert texRGB.pic.mode == "RGB"
     assert texRGB.bpp == 3
-    assert (len(texRGB.pixels) ==
-            texRGB.pic.size[0] * texRGB.pic.size[1])
     
 def test_texture_creation_RGBA():
     '''Test that RGBA texture has proper mode conversion and size'''
@@ -88,8 +86,6 @@ def test_texture_creation_RGBA():
     texRGBA = Texture(colourpng)
     assert texRGBA.pic.mode == "RGBA"
     assert texRGBA.bpp == 4
-    assert (len(texRGBA.pixels) ==
-            texRGBA.pic.size[0] * texRGBA.pic.size[1])
     
 def test_texture_creation_BWA():
     '''Test that BW+A texture has proper mode conversion and size'''
@@ -97,8 +93,6 @@ def test_texture_creation_BWA():
     texBWA = Texture(bwapng)
     assert texBWA.pic.mode == "RGBA"
     assert texBWA.bpp == 4
-    assert (len(texBWA.pixels) ==
-            texBWA.pic.size[0] * texBWA.pic.size[1])
     
 def test_texture_creation_palette():
     '''Test that palette texture has proper mode conversion and size'''
@@ -106,15 +100,13 @@ def test_texture_creation_palette():
     texpal = Texture(colourgif)
     assert texpal.pic.mode == "RGBA"
     assert texpal.bpp == 4
-    assert (len(texpal.pixels) ==
-            texpal.pic.size[0] * texpal.pic.size[1])
     
 class TestTexMethods:
     '''Tests for Texture methods'''
     def setUp(self):
         '''Setup - create a Texture
         
-        gradient.png is a spiral gradient cented on (128,96) in
+        gradient.png is a spiral gradient centred on (128,96) in
         a (256,192) image
         '''
         self.texture = Texture(Image.open("tests/gradient.png"))
@@ -126,15 +118,17 @@ class TestTexMethods:
     def testPixList(self):
         '''Test pixel list function'''
         # generated at object creation
-        assert (len(self.texture.pixels) * self.texture.bpp
-                == len(self.texture.pic.tobytes()))
-        for p in self.texture.pixels:
+        assert len(self.texture.pixels) == self.texture.pic.size[0]
+        for l in self.texture.pixels:
+            assert len(l) == self.texture.pic.size[1]
+        for p in itertools.chain.from_iterable(self.texture.pixels):
             assert len(p) == self.texture.bpp
             
         # content
-        flat = range(99)
-        squish = [(i, i+1, i+2) for i in range(0,99,3)]
-        assert self.texture._pixelList(flat) == squish
+        for _ in xrange(100):
+            x = randrange(self.texture.pic.size[0])
+            y = randrange(self.texture.pic.size[1])
+            assert self.texture.pixels[x][y] == self.texture.pic.getpixel((x,y))
     
     def testLocationSelf(self):
         '''Test location validity function for self.pic.size'''
@@ -152,32 +146,11 @@ class TestTexMethods:
         assert not self.texture._locTest((x-1,y))
         assert not self.texture._locTest((x,y))
         
-    def testIndex(self):
-        '''Test flat indexing function'''
-        x = self.texture.pic.size[0]
-        y = self.texture.pic.size[1]
-        assert self.texture._index((0,0)) == 0
-        assert self.texture._index((1,0)) == 1
-        assert self.texture._index((0,1)) == x
-        assert self.texture._index((x/2,y/2)) == x/2 + y/2 * x
-        assert (self.texture._index((x-1,y-1)) + 1
-                == self.texture.pic.size[0] * self.texture.pic.size[1])
-        assert ((self.texture._index((x-1,y-1)) + 1) 
-                == len(self.texture.pixels))
-        
-    def testIndexShift(self):
-        '''Test flat indexing function with shifts'''
-        x = self.texture.pic.size[0]
-        y = self.texture.pic.size[1]
-        assert self.texture._index((0,0), (1,1)) == x + 1
-        assert self.texture._index((0,1), (-1,0)) == x - 1
-        assert self.texture._index((0,y/2), (x/2,0)) == x/2 + y/2 * x
-        
     def testListValid(self):
         '''Test neighbourhood function for valid slices'''
         x = self.texture.pic.size[0]
         y = self.texture.pic.size[1]
-        valid = [True] * x * y
+        valid = [[True] * y for _ in xrange(x)]
         ell = EllShape(2)
         box = SquareShape(2)
         
@@ -205,7 +178,7 @@ class TestTexMethods:
         '''Test neighbourhood function for invalid slices'''
         x = self.texture.pic.size[0]
         y = self.texture.pic.size[1]
-        invalid = [False] * x * y
+        invalid = [[False] * y for _ in xrange(x)]
         ell = EllShape(2)
         box = SquareShape(2)
 
@@ -222,7 +195,8 @@ class TestTexMethods:
         y = self.texture.pic.size[1]
         
         # zero through row 95, 1 rows 96-191
-        semivalid = [False] * x * (y/2) + [True] * x * (y/2)
+        semivalid = [[False] * (y/2) + [True] * (y/2)
+                     for _ in xrange(x)]
         ell = EllShape(2)
         box = SquareShape(2)
 

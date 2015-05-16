@@ -74,7 +74,11 @@ class Texture:
             self.pic = image.convert("RGB")
             self.bpp = 3
         self.pixels = self._pixelList(bytearray(self.pic.tobytes()))
-        self.valid = [True] * (self.pic.size[0] * self.pic.size[1])
+
+        # two-dim list of x by y
+        # y size on the inside for addressing as [x][y]
+        self.valid = [[True] * self.pic.size[1] 
+                      for _ in xrange(self.pic.size[0])]
 
     def _pixelList(self, bytelist):
         '''Convert a list of bytes into an array of pixels.
@@ -84,12 +88,19 @@ class Texture:
         
         Returns: list of bpp-tuples, each corresponding to a pixel
         
-        Preconditions: len(bytes) is a multiple of bpp
+        Preconditions: len(bytes) is bpp * image size
         '''
-        assert len(bytelist) % self.bpp == 0
-        pixlist = []
-        for i in range(0, len(bytelist), self.bpp):
-            pixlist.append(tuple(bytelist[i:i+self.bpp]))
+        assert len(bytelist) == self.bpp * self.pic.size[0] * self.pic.size[1]
+        
+        # generate empty two-dim list of x by y
+        pixlist = [[None] * self.pic.size[1] for _ in xrange(self.pic.size[0])]
+        
+        # flat position counter
+        i = 0
+        for y in xrange(self.pic.size[1]):
+            for x in xrange(self.pic.size[0]):
+                pixlist[x][y] = tuple(bytelist[i:i+self.bpp])
+                i += self.bpp
         return pixlist
         
     def _locTest(self, point, shift = (0,0)):
@@ -105,20 +116,7 @@ class Texture:
                 and (point[0] + shift[0] < self.pic.size[0]) 
                 and (point[1] + shift[1] >= 0) 
                 and (point[1] + shift[1] < self.pic.size[1]))
-        
-    def _index(self, pixel, shift = (0, 0)):
-        '''Determine the index into flat vectors for a given pixel
-        
-        Arguments:
-        pixel -- 2-tuple pixel location
-        shift -- 2-tuple shift from location (def. (0,0)) 
-        
-        Returns -- integer location in flat lists
-        '''
-        # TODO consider using numpy for two-dim array rather than needing this
-        return ((pixel[0] + shift[0]) 
-                + (pixel[1] + shift[1]) * self.pic.size[0])
-        
+                
     def goodList(self, centre, neighbourhood, valid):
         '''Trim a list of shifts about a centre point
         
@@ -134,7 +132,7 @@ class Texture:
         for shift in neighbourhood:
             point = (centre[0] + shift[0], centre[1] + shift[1])
             if (self._locTest(point) 
-                and valid[self._index(point)]):
+                and valid[point[0]][point[1]]):
                 ret.append(shift)
         return ret
     
@@ -150,7 +148,7 @@ class Texture:
         Preconditions: loc + shift is inside the image
         '''
         assert self._locTest(loc, shift)
-        return self.pixels[self._index(loc, shift)]
+        return self.pixels[loc[0] + shift[0]][loc[1] + shift[1]]
     
     def setPixel(self, value, loc, shift = (0,0)):
         '''Set the pixel at given location and shift
@@ -165,7 +163,7 @@ class Texture:
         '''
         assert self._locTest(loc, shift)
         assert len(value) == self.bpp
-        self.pixels[self._index(loc,shift)] = value
+        self.pixels[loc[0] + shift[0]][loc[1] + shift[1]] = value
         
     def setValid(self, loc):
         '''Set valid flag for pixel at a given location
@@ -176,7 +174,7 @@ class Texture:
         Preconditions: loc is inside the image
         Postcondition: valid flag for pixel at loc is set to 1 
         '''
-        self.valid[self._index(loc)] = True
+        self.valid[loc[0]][loc[1]] = True
     
     def toImage(self):
         '''Output this texture data into an Image
@@ -184,8 +182,14 @@ class Texture:
         Returns: an Image in the same encoding as the source containing
             this texture's data
         '''
-        # flatten pixel list
-        channels = itertools.chain.from_iterable(self.pixels)
+        # flatten two-dim pixel to one-dim
+        pixlist = [None] * self.pic.size[0] * self.pic.size[1]
+        sx = self.pic.size[0]
+        for x in xrange(self.pic.size[0]):
+            for y in xrange(self.pic.size[1]):
+                pixlist[x + y * sx] = self.pixels[x][y]
+        # flatten pixel tuples to bytes
+        channels = itertools.chain.from_iterable(pixlist)
                     
         # convert to byte buffer
         outbytes = buffer(bytearray(channels))
@@ -220,8 +224,11 @@ class EmptyTexture(Texture):
             self.bpp = 3
             colour = (0, 0, 0)
         self.pic = Image.new(mode, size)
-        self.pixels = [colour] * size[0] * size[1]
-        self.valid = [False] * (size[0] * size[1])
+        
+        # two-dim lists of x by y
+        # y size on the inside for addressing as [x][y]
+        self.pixels = [[colour] * size[1] for _ in xrange(size[0])]
+        self.valid = [[False] * size[1] for _ in xrange(size[0])]
 
 class Shape:
     '''Defines a region for texture comparison.
