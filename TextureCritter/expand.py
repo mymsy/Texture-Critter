@@ -90,8 +90,8 @@ def compareRegion(tex1, tex2, cen1, cen2, region, comp):
     # loop over shifts
     total = 0
     for shift in region:
-        p1 = tex1.getPixel(cen1, shift)
-        p2 = tex2.getPixel(cen2, shift)
+        p1 = tex1.pixels[cen1[0] + shift[0]][cen1[1] + shift[1]]
+        p2 = tex2.pixels[cen2[0] + shift[0]][cen2[1] + shift[1]]
         total += comp(p1, p2)
     
     # weight by number of points compared
@@ -132,7 +132,6 @@ def expand(source, target, near):
     spoints = source.pic.size[0] * source.pic.size[1]
     targetGoodList = target.goodList
     sourceGoodList = source.goodList
-    sourceGetPixel = source.getPixel
 
     # for each target pixel...    
     for tloc in tlist:
@@ -153,7 +152,7 @@ def expand(source, target, near):
             weight = compareRegion(source, target, sloc, tloc, nearest, comp)
             
             # add tuple of weight and source pixel to choices
-            choices[ci] = (weight, sourceGetPixel(sloc))
+            choices[ci] = (weight, source.pixels[sloc[0]][sloc[1]])
             ci += 1
             
         # pick minimum from the list
