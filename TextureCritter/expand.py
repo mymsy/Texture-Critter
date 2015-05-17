@@ -128,36 +128,42 @@ def expand(source, target, near):
              for y in xrange(target.pic.size[1])
              for x in xrange(target.pic.size[0])]
 
+    # dereference to local outside the loop, for speed
+    spoints = source.pic.size[0] * source.pic.size[1]
+    targetGoodList = target.goodList
+    sourceGoodList = source.goodList
+    sourceGetPixel = source.getPixel
+
     # for each target pixel...    
     for tloc in tlist:
         # trim neighbourhood around this point
-        nearer = target.goodList(tloc, near.shift, target.valid)
+        nearer = targetGoodList(tloc, near.shift, target.valid)
         
         # clear list of choices
-        choices = []
+        # faster to preallocate than to use appends
+        choices = [None] * spoints
+        ci = 0
         
         # loop over all source pixels
         for sloc in slist:
             # trim above neighbourhood around this point
-            nearest = source.goodList(sloc, nearer, source.valid)
+            nearest = sourceGoodList(sloc, nearer, source.valid)
 
             # weighted texture distance of remaning region
             weight = compareRegion(source, target, sloc, tloc, nearest, comp)
             
             # add tuple of weight and source pixel to choices
-            choices.append((weight, source.getPixel(sloc)))
+            choices[ci] = (weight, sourceGetPixel(sloc))
+            ci += 1
             
-        # sort list, pick first
+        # pick minimum from the list
         # TODO this gives lexical sort; want stable sort on only first element
         # actually stable gives preference to input order, 
         # lexical gives preference to colour in RGB order
         # what order is actually desired? (probably random) 
         # TODO weighted random choice
         # sorting actually unnecessary, even for randomness
-        choices.sort()
-        newval = choices[0][1]
-        # shitty randomness - random of first ten
-        #newval = choices[random.randrange(10)][1]
+        newval = min(choices)[1]
         
         # set the pixel!
         target.setPixel(newval, tloc)
