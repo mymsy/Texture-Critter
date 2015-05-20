@@ -112,10 +112,10 @@ class Texture:
         
         Returns: true if the pixel is within the image, false if not
         '''        
-        return ((point[0] + shift[0] >= 0) 
-                and (point[0] + shift[0] < self.pic.size[0]) 
-                and (point[1] + shift[1] >= 0) 
-                and (point[1] + shift[1] < self.pic.size[1]))
+        return ((point[0] >= 0) 
+                and (point[0] < self.pic.size[0]) 
+                and (point[1] >= 0) 
+                and (point[1] < self.pic.size[1]))
                 
     def goodList(self, centre, neighbourhood, valid):
         '''Trim a list of shifts about a centre point
