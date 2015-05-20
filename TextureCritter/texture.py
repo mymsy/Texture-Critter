@@ -130,10 +130,20 @@ class Texture:
         '''
         ret = []
         for shift in neighbourhood:
-            point = (centre[0] + shift[0], centre[1] + shift[1])
-            if (self._locTest(point) 
-                and valid[point[0]][point[1]]):
-                ret.append(shift)
+            try:
+                # append shift if centre + shift is nonnegative (can't
+                # use exceptional flow on that side b/c python allows
+                # negative indexing)
+                # and the corresponding pixel is valid
+                if (centre[0] >= -shift[0]
+                    and centre[1] >= -shift[1]
+                    and valid[centre[0] + shift[0]][centre[1] + shift[1]]): 
+                    ret.append(shift)
+            except IndexError:
+                # if the corresponding pixel is outside the image, end up here
+                # only works for too large index - negative index just wraps
+                # exception is not a problem, we just don't want it, so pass
+                pass
         return ret
     
     def getPixel(self, loc):
