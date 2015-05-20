@@ -103,7 +103,7 @@ class Texture:
                 i += self.bpp
         return pixlist
         
-    def _locTest(self, point, shift = (0,0)):
+    def _locTest(self, loc):
         '''Test whether a pixel is within this image
         
         Arguments:
@@ -112,10 +112,10 @@ class Texture:
         
         Returns: true if the pixel is within the image, false if not
         '''        
-        return ((point[0] >= 0) 
-                and (point[0] < self.pic.size[0]) 
-                and (point[1] >= 0) 
-                and (point[1] < self.pic.size[1]))
+        return ((loc[0] >= 0) 
+                and (loc[0] < self.pic.size[0]) 
+                and (loc[1] >= 0) 
+                and (loc[1] < self.pic.size[1]))
                 
     def goodList(self, centre, neighbourhood, valid):
         '''Trim a list of shifts about a centre point
@@ -136,7 +136,7 @@ class Texture:
                 ret.append(shift)
         return ret
     
-    def getPixel(self, loc, shift = (0, 0)):
+    def getPixel(self, loc):
         '''Get the pixel at given location and shift
         
         Arguments:
@@ -147,10 +147,10 @@ class Texture:
         
         Preconditions: loc + shift is inside the image
         '''
-        assert self._locTest(loc, shift)
-        return self.pixels[loc[0] + shift[0]][loc[1] + shift[1]]
+        assert self._locTest(loc)
+        return self.pixels[loc[0]][loc[1]]
     
-    def setPixel(self, value, loc, shift = (0,0)):
+    def setPixel(self, value, loc):
         '''Set the pixel at given location and shift
         
         Arguments:
@@ -161,9 +161,9 @@ class Texture:
         Preconditions: len(value) = self.bpp; loc + shift is inside the image
         Postconditions: pixel at loc + shift is set to value
         '''
-        assert self._locTest(loc, shift)
+        assert self._locTest(loc)
         assert len(value) == self.bpp
-        self.pixels[loc[0] + shift[0]][loc[1] + shift[1]] = value
+        self.pixels[loc[0]][loc[1]] = value
         
     def setValid(self, loc):
         '''Set valid flag for pixel at a given location
@@ -174,6 +174,7 @@ class Texture:
         Preconditions: loc is inside the image
         Postcondition: valid flag for pixel at loc is set to 1 
         '''
+        assert self._locTest(loc)
         self.valid[loc[0]][loc[1]] = True
     
     def toImage(self):
