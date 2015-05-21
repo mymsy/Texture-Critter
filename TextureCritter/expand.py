@@ -149,8 +149,20 @@ def expand(source, target, near):
             nearest = sourceGoodList(sloc, nearer, source.valid)
 
             # weighted texture distance of remaning region
-            weight = compareRegion(source, target, sloc, tloc, nearest, comp)
-            
+            # weight = compareRegion(source, target, sloc, tloc, nearest, comp)
+            if (len(nearest) == 0): 
+                weight = float('inf')
+            else:
+                # loop over shifts
+                total = 0
+                for shift in nearest:
+                    p1 = source.pixels[sloc[0] + shift[0]][sloc[1] + shift[1]]
+                    p2 = target.pixels[tloc[0] + shift[0]][tloc[1] + shift[1]]
+                    total += comp(p1, p2)
+                
+                # weight by number of points compared
+                weight = float(total)/len(nearest)
+                
             # add tuple of weight and source pixel to choices
             choices[ci] = (weight, source.pixels[sloc[0]][sloc[1]])
             ci += 1
