@@ -129,6 +129,7 @@ class Texture:
             are both initialised and within the image
         '''
         ret = []
+        retend = ret.append
         for shift in neighbourhood:
             try:
                 # append shift if centre + shift is nonnegative (can't
@@ -138,7 +139,7 @@ class Texture:
                 if (centre[0] >= -shift[0]
                     and centre[1] >= -shift[1]
                     and valid[centre[0] + shift[0]][centre[1] + shift[1]]): 
-                    ret.append(shift)
+                    retend(shift)
             except IndexError:
                 # if the corresponding pixel is outside the image, end up here
                 # only works for too large index - negative index just wraps
